@@ -1,0 +1,1464 @@
+{
+  "portafolios": [
+    {
+      "id": "port_distribucion",
+      "nombre": "Portafolio Distribución",
+      "descripcion": "Planificación logística y optimización de rutas a lo largo de toda la red de distribución.",
+      "activo": true,
+      "equipos": [
+        {
+          "id": "eq_planificacion",
+          "nombre": "Planificación del Transporte",
+          "descripcion": "Optimización de rutas y planificación logística de primera, media y última milla.",
+          "portafolioId": "port_distribucion",
+          "activo": true
+        }
+      ]
+    }
+  ],
+  "usuarios": [
+    {
+      "_id": "usr_001",
+      "email": "ricardo.moscoso@blue.cl",
+      "nombre": "Ricardo Moscoso",
+      "rol": "admin",
+      "activo": true,
+      "canConfigure": true,
+      "portafoliosAdmin": [
+        "port_distribucion"
+      ],
+      "fechaRegistro": "2026-04-24T00:00:00.000Z",
+      "autoRegistro": false
+    },
+    {
+      "_id": "usr_002",
+      "email": "javiera.leon@blue.cl",
+      "nombre": "Javiera León",
+      "rol": "admin",
+      "activo": true,
+      "canConfigure": true,
+      "portafoliosAdmin": [
+        "port_distribucion"
+      ],
+      "fechaRegistro": "2026-04-24T00:00:00.000Z",
+      "autoRegistro": false
+    },
+    {
+      "_id": "usr_003",
+      "email": "carlos.gallardo@blue.cl",
+      "nombre": "Carlos Gallardo",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T01:00:00.000Z",
+      "autoRegistro": true
+    },
+    {
+      "_id": "usr_004",
+      "email": "leslye.rojas@blue.cl",
+      "nombre": "Leslye Rojas",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T01:00:00.000Z",
+      "autoRegistro": true
+    },
+    {
+      "_id": "usr_005",
+      "email": "hector.matcovich@blue.cl",
+      "nombre": "Héctor Matcovich",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T01:00:00.000Z",
+      "autoRegistro": true
+    },
+    {
+      "_id": "usr_006",
+      "email": "sara.vega@blue.cl",
+      "nombre": "Sara Vega",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T01:00:00.000Z",
+      "autoRegistro": true
+    },
+    {
+      "_id": "usr_007",
+      "email": "elias.sabja@blue.cl",
+      "nombre": "Elias Sabja",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T01:00:00.000Z",
+      "autoRegistro": true
+    },
+    {
+      "_id": "usr_008",
+      "email": "fabian.sandoval@blue.cl",
+      "nombre": "Fabian Sandoval",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T02:00:00.000Z",
+      "autoRegistro": true
+    },
+    {
+      "_id": "usr_009",
+      "email": "denis.miranda@blue.cl",
+      "nombre": "Denis Miranda",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T02:00:00.000Z",
+      "autoRegistro": true
+    },
+    {
+      "_id": "usr_010",
+      "email": "rodrigo.hurtado@blue.cl",
+      "nombre": "Rodrigo Hurtado",
+      "rol": "viewer",
+      "activo": true,
+      "canConfigure": false,
+      "portafoliosAdmin": [],
+      "fechaRegistro": "2026-04-24T02:00:00.000Z",
+      "autoRegistro": true
+    }
+  ],
+  "equipoId": "eq_planificacion",
+  "config": {
+    "equipoId": "eq_planificacion",
+    "titulo": "Portafolio Distribución - Planificación del Transporte",
+    "año": "2026",
+    "q_activo": "Q2",
+    "sprint_actual": "65",
+    "fecha_actualizacion": "03/05/26",
+    "version": "4",
+    "po": "Javiera León",
+    "im": "Ricardo Moscoso",
+    "tl": "Carlos Gallardo",
+    "total_devs": 7,
+    "mission": "Diseñar y optimizar el sistema de planificación logística de Blue Express, desarrollando soluciones tecnológicas que mejoren la eficiencia operativa en cada milla del proceso de distribución.",
+    "vision": "Ser el equipo referente en planificación logística inteligente, habilitando una red de distribución predictiva, eficiente y escalable que posicione a Blue Express como líder en última milla en Chile."
+  },
+  "miembros": [
+    {
+      "id": "eq_001",
+      "equipoId": "eq_planificacion",
+      "nombre": "Javiera León",
+      "rol": "PO",
+      "iniciales": "JL",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=47"
+    },
+    {
+      "id": "eq_002",
+      "equipoId": "eq_planificacion",
+      "nombre": "Ricardo Moscoso",
+      "rol": "IM",
+      "iniciales": "RM",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=12"
+    },
+    {
+      "id": "eq_003",
+      "equipoId": "eq_planificacion",
+      "nombre": "Carlos Gallardo",
+      "rol": "TL",
+      "iniciales": "CG",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=33"
+    },
+    {
+      "id": "eq_004",
+      "equipoId": "eq_planificacion",
+      "nombre": "Leslye Rojas",
+      "rol": "Front",
+      "iniciales": "LR",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=44"
+    },
+    {
+      "id": "eq_005",
+      "equipoId": "eq_planificacion",
+      "nombre": "Hector Matcovich",
+      "rol": "Front",
+      "iniciales": "HM",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=52"
+    },
+    {
+      "id": "eq_006",
+      "equipoId": "eq_planificacion",
+      "nombre": "Sara Vega",
+      "rol": "Full Stack",
+      "iniciales": "SV",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=25"
+    },
+    {
+      "id": "eq_007",
+      "equipoId": "eq_planificacion",
+      "nombre": "Elias Sabja",
+      "rol": "Full Stack",
+      "iniciales": "ES",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=61"
+    },
+    {
+      "id": "eq_008",
+      "equipoId": "eq_planificacion",
+      "nombre": "Fabian Sandoval",
+      "rol": "Full Stack",
+      "iniciales": "FS",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=15"
+    },
+    {
+      "id": "eq_009",
+      "equipoId": "eq_planificacion",
+      "nombre": "Denis Miranda",
+      "rol": "Full Stack",
+      "iniciales": "DM",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=38"
+    },
+    {
+      "id": "eq_010",
+      "equipoId": "eq_planificacion",
+      "nombre": "Rodrigo Hurtado",
+      "rol": "Full Stack",
+      "iniciales": "RH",
+      "activo": true,
+      "foto_url": "https://i.pravatar.cc/150?img=57"
+    }
+  ],
+  "capacidades": [
+    {
+      "key": "plan",
+      "equipoId": "eq_planificacion",
+      "label": "Planificación",
+      "nombre": "Planificación",
+      "color": "#1B30CC",
+      "orden": 1,
+      "contexto": "Optimizar la planificación y operación de cada tramo de la red logística — desde el retiro hasta la entrega final — asegurando eficiencia, escalabilidad y alineación con la capacidad real de ruteo.",
+      "alcances": [
+        {
+          "key": "primera",
+          "capacidadKey": "plan",
+          "aplicacionId": "app_smart_retiros",
+          "nombre": "Primera Milla",
+          "icon": "🚚",
+          "color": "#7C3AED",
+          "descripcion": "Automatizar y escalar la planificación de retiros: reservas, abastecimiento y asignación de couriers.",
+          "contexto": "Cubre el tramo desde el cliente hasta la base o hub de entrada. El foco está en la reserva anticipada de capacidad de courier, la asignación automática y el seguimiento del abastecimiento."
+        },
+        {
+          "key": "media",
+          "capacidadKey": "plan",
+          "aplicacionId": "app_blue_planner",
+          "nombre": "Media Milla",
+          "icon": "🔄",
+          "color": "#1E40AF",
+          "descripcion": "Tramo: Base Principal → Hub Urbano (intrarregional). Control y optimización de la flota.",
+          "contexto": "Conecta las bases regionales con los hubs urbanos. Involucra la planificación de flota propia, frecuencias de viaje y optimización de cargas consolidadas.",
+          "badge": "Nueva"
+        },
+        {
+          "key": "troncales",
+          "capacidadKey": "plan",
+          "aplicacionId": "app_blue_planner",
+          "nombre": "Troncales",
+          "icon": "🛣️",
+          "color": "#0369A1",
+          "descripcion": "Tramo: SCL ↔ Bases Regionales (interregional, multi-parada).",
+          "contexto": "Rutas de larga distancia que conectan Santiago con las bases regionales. La planificación requiere gestión de capacidad de carga, ventanas horarias y restricciones por ruta.",
+          "badge": "Nueva"
+        },
+        {
+          "key": "ultima",
+          "capacidadKey": "plan",
+          "aplicacionId": "app_optimizador",
+          "nombre": "Última Milla",
+          "icon": "📦",
+          "color": "#EA580C",
+          "descripcion": "Sistema de optimización de rutas end-to-end para la entrega final.",
+          "contexto": "Tramo desde el hub hasta el cliente final. Es el más complejo en términos de variabilidad (tráfico, ventanas horarias, intentos fallidos). El optimizador genera secuencias de entrega que maximizan OS por ruta."
+        }
+      ]
+    },
+    {
+      "key": "int",
+      "equipoId": "eq_planificacion",
+      "label": "Inteligencia de Direcciones",
+      "nombre": "Inteligencia de Direcciones",
+      "color": "#DB2777",
+      "orden": 2,
+      "contexto": "Garantizar que cada dirección de la red sea confiable, georreferenciada y certificada para operar sin necesidad de consultar proveedores externos, reduciendo errores y tiempos de resolución.",
+      "alcances": [
+        {
+          "key": "georref",
+          "capacidadKey": "int",
+          "aplicacionId": "app_geosolver",
+          "nombre": "Georreferenciación",
+          "icon": "📍",
+          "color": "#DB2777",
+          "descripcion": "Limpieza y enriquecimiento de direcciones. Alimenta el Diccionario Blue y calcula Hub y zona asignados.",
+          "contexto": "Motor interno de normalización y geolocalización que resuelve direcciones a coordenadas con asignación automática de hub, zona y sector operativo. Elimina la dependencia de servicios externos."
+        },
+        {
+          "key": "calidad",
+          "capacidadKey": "int",
+          "aplicacionId": "app_diccionario_blue",
+          "nombre": "Calidad de Direcciones",
+          "icon": "✅",
+          "color": "#9D174D",
+          "descripcion": "Certificación de direcciones mediante geolocalización real.",
+          "contexto": "Clasifica direcciones en niveles de calidad (alta, media, baja) según la precisión de la geolocalización y la completitud de los datos."
+        }
+      ]
+    },
+    {
+      "key": "red",
+      "equipoId": "eq_planificacion",
+      "label": "Red de Distribución",
+      "nombre": "Red de Distribución",
+      "color": "#0891B2",
+      "orden": 3,
+      "contexto": "Administrar y mantener actualizado el modelo territorial y el catálogo de nodos operativos que sustentan el flujo logístico nacional, incluyendo cobertura por clasificación territorial.",
+      "alcances": [
+        {
+          "key": "reddist",
+          "capacidadKey": "red",
+          "aplicacionId": "app_red_dist",
+          "nombre": "Red de Distribución",
+          "icon": "🗺️",
+          "color": "#0891B2",
+          "descripcion": "Catálogo de Bases y Hubs activos y sus rutas válidas. Modelo territorial con indicadores de cobertura.",
+          "contexto": "Mantiene el mapa operativo de toda la red: Bases, Hubs, Postas y sus relaciones de cobertura territorial. Es la fuente de verdad para el cálculo de zonas, rutas y capacidades de nodo."
+        }
+      ]
+    },
+    {
+      "key": "programas",
+      "equipoId": "eq_planificacion",
+      "label": "Programa",
+      "nombre": "Programa",
+      "color": "#2563EB",
+      "orden": 4,
+      "contexto": "Agrupa productos transversales donde el equipo implementa una parte del proceso completo del programa.",
+      "alcances": [
+        {
+          "key": "programa_b2b",
+          "capacidadKey": "programas",
+          "aplicacionId": "app_blue_planner",
+          "nombre": "Programa B2B",
+          "icon": "💼",
+          "color": "#2563EB",
+          "descripcion": "Producto transversal orientado a iniciativas, seguimiento y entregables del frente B2B.",
+          "contexto": "El programa B2B involucra clientes corporativos con requerimientos especiales de planificación: ventanas horarias pactadas, volúmenes garantizados y SLA diferenciados."
+        }
+      ]
+    }
+  ],
+  "aplicaciones": [
+    {
+      "id": "app_blue_planner",
+      "nombre": "Blue Planner",
+      "descripcion": "Dashboard de planificación operativa. Visualiza reservas, capacidades, asignaciones de courier y métricas del día.",
+      "capacidadKey": "plan",
+      "alcanceKey": "media",
+      "activo": true,
+      "ultimo_release": {
+        "version": "0.8.0",
+        "fecha": "2026-04-15",
+        "estado": "done",
+        "descripcion": "Dashboard de planificación operativa con indicadores del día en tiempo real.",
+        "changelog": [
+          "Vista de reservas asignadas vs pendientes",
+          "Indicadores de velocidad de courier por zona",
+          "Integración con Smart Retiros para asignación automática"
+        ]
+      }
+    },
+    {
+      "id": "app_smart_retiros",
+      "nombre": "Smart Retiros",
+      "descripcion": "Motor de asignación automática de reservas según capacidad disponible, zona y disponibilidad operativa de couriers.",
+      "capacidadKey": "plan",
+      "alcanceKey": "primera",
+      "activo": true,
+      "ultimo_release": {
+        "version": "1.0.0",
+        "fecha": "2026-04-30",
+        "estado": "done",
+        "descripcion": "Primera versión productiva del motor de asignación automática de reservas.",
+        "changelog": [
+          "Endpoint POST /api/v1/reservas con validación de capacidad disponible",
+          "Asignación automática por zona y disponibilidad operativa de courier",
+          "Integración con sistema de gestión de OS"
+        ]
+      }
+    },
+    {
+      "id": "app_optimizador",
+      "nombre": "Optimizador de Rutas",
+      "descripcion": "Generador de rutas óptimas end-to-end para última milla. Opera con restricciones reales de capacidad, ventana horaria y zonificación.",
+      "capacidadKey": "plan",
+      "alcanceKey": "ultima",
+      "activo": true,
+      "ultimo_release": {
+        "version": "1.0.0",
+        "fecha": "2026-04-28",
+        "estado": "done",
+        "descripcion": "MVP del motor de optimización de rutas para Base Valdivia.",
+        "changelog": [
+          "Motor de optimización VRP para lotes de hasta 80 OS por base",
+          "Restricciones: capacidad de camión, ventana horaria y OS prioritarias",
+          "Tiempo de respuesta menor a 2 segundos garantizado"
+        ]
+      }
+    },
+    {
+      "id": "app_geosolver",
+      "nombre": "Geosolver",
+      "descripcion": "Sistema de normalización, georreferenciación y certificación de calidad de direcciones. Alimenta el Diccionario Blue.",
+      "capacidadKey": "int",
+      "alcanceKey": "georref",
+      "activo": true,
+      "ultimo_release": {
+        "version": "0.1.0",
+        "fecha": "2026-05-15",
+        "estado": "done",
+        "descripcion": "Primera versión con Diccionario Blue (180K registros) y motor Hub/Zona operativo.",
+        "changelog": [
+          "Diccionario Blue v0.1 con 180K direcciones normalizadas y clasificadas",
+          "Motor de asignación automática de Hub y Zona por coordenadas",
+          "API interna de georreferenciación disponible para sistemas integrados",
+          "Clasificación de calidad: alta (>= 95%), media (>= 80%), baja (< 80%)"
+        ]
+      }
+    },
+    {
+      "id": "app_diccionario_blue",
+      "nombre": "Diccionario Blue",
+      "descripcion": "Repositorio centralizado de direcciones normalizadas con coordenadas, hub asignado, zona y nivel de calidad.",
+      "capacidadKey": "int",
+      "alcanceKey": "calidad",
+      "activo": true,
+      "ultimo_release": {
+        "version": "0.1.0",
+        "fecha": "2026-05-15",
+        "estado": "done",
+        "descripcion": "Diccionario Blue con 180K registros normalizados y niveles de calidad.",
+        "changelog": [
+          "180K direcciones normalizadas y georreferenciadas",
+          "Clasificación por calidad: alta, media, baja",
+          "Actualización automática desde pipeline de OS"
+        ]
+      }
+    },
+    {
+      "id": "app_red_dist",
+      "nombre": "Red de Distribución",
+      "descripcion": "Catálogo oficial de nodos operativos: Bases, Hubs y Postas. Modelo territorial con cobertura por región y comuna.",
+      "capacidadKey": "red",
+      "alcanceKey": "reddist",
+      "activo": true,
+      "ultimo_release": {
+        "version": "1.0.0",
+        "fecha": "2026-04-25",
+        "estado": "done",
+        "descripcion": "Catálogo formal de nodos operativos nacionales con atributos completos.",
+        "changelog": [
+          "Catálogo de 45 Bases y 12 Hubs activos a nivel nacional",
+          "Atributos por nodo: horario, capacidad máxima y rutas de entrada/salida",
+          "API REST de consulta de nodos disponible"
+        ]
+      }
+    }
+  ],
+  "bets": [
+    {
+      "id": "bet_q2_01",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "capacidadKey": "plan",
+      "producto": "Optimizador de Rutas",
+      "color": "#1B30CC",
+      "descripcion": "Construir un sistema de optimización de rutas end-to-end para primera y última milla, generando planes factibles, eficientes y escalables con restricciones operativas reales.",
+      "mos_ids": [
+        "mos_q2_01",
+        "mos_q2_02",
+        "mos_q2_03",
+        "mos_q2_04"
+      ],
+      "mos_inactivos": [
+        "mos_q2_02",
+        "mos_q2_03",
+        "mos_q2_04"
+      ],
+      "orden": 1,
+      "activo": true,
+      "aplicacionId": "app_optimizador"
+    },
+    {
+      "id": "bet_q2_02",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "capacidadKey": "int",
+      "producto": "Geosolver",
+      "color": "#DB2777",
+      "descripcion": "Desarrollar un sistema de direcciones y georreferenciación confiable, estandarizado y autocorrectivo, que habilite la optimización de rutas a escala.",
+      "mos_ids": [
+        "mos_q2_05",
+        "mos_q2_06",
+        "mos_q2_07",
+        "mos_q2_08"
+      ],
+      "mos_inactivos": [
+        "mos_q2_06",
+        "mos_q2_07",
+        "mos_q2_08"
+      ],
+      "orden": 2,
+      "activo": true,
+      "aplicacionId": "app_geosolver"
+    },
+    {
+      "id": "bet_q2_03",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "capacidadKey": "plan",
+      "producto": "Smart Retiros",
+      "color": "#7C3AED",
+      "descripcion": "Automatizar y escalar la planificación de reservas y abastecimiento, asegurando correctitud, anticipación y alineación con la capacidad real de ruteo.",
+      "mos_ids": [
+        "mos_q2_09",
+        "mos_q2_10",
+        "mos_q2_11"
+      ],
+      "mos_inactivos": [
+        "mos_q2_10",
+        "mos_q2_11"
+      ],
+      "orden": 3,
+      "activo": true,
+      "aplicacionId": "app_smart_retiros"
+    },
+    {
+      "id": "bet_q1_01",
+      "equipoId": "eq_planificacion",
+      "q": "Q1",
+      "capacidadKey": "plan",
+      "producto": "Blue Planner",
+      "color": "#0369A1",
+      "descripcion": "Validar la factibilidad operativa del optimizador de rutas en Base Valdivia con un primer piloto funcional.",
+      "mos_ids": [
+        "mos_q1_01",
+        "mos_q1_02"
+      ],
+      "mos_inactivos": [],
+      "orden": 1,
+      "activo": true,
+      "aplicacionId": "app_blue_planner"
+    }
+  ],
+  "mos": [
+    {
+      "id": "mos_q2_01",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(+) Productividad de rutas (OS/ruta, kg/camión)",
+      "linea_base": "42 OS/ruta",
+      "meta": "52 OS/ruta",
+      "actual": "47 OS/ruta",
+      "orden": 1
+    },
+    {
+      "id": "mos_q2_02",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(–) Km por OS / ruta",
+      "linea_base": "28 km/OS",
+      "meta": "22 km/OS",
+      "actual": "25 km/OS",
+      "orden": 2
+    },
+    {
+      "id": "mos_q2_03",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(+) % rutas ejecutadas según planificación",
+      "linea_base": "61%",
+      "meta": "80%",
+      "actual": "71%",
+      "orden": 3
+    },
+    {
+      "id": "mos_q2_04",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(–) Reprocesos o replanificaciones diarias",
+      "linea_base": "12/día",
+      "meta": "4/día",
+      "actual": "8/día",
+      "orden": 4
+    },
+    {
+      "id": "mos_q2_05",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(–) % fallo por direcciones (BA / DI / MR / MRH)",
+      "linea_base": "18%",
+      "meta": "10%",
+      "actual": "14%",
+      "orden": 1
+    },
+    {
+      "id": "mos_q2_06",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(+) % direcciones con calidad alta",
+      "linea_base": "42%",
+      "meta": "70%",
+      "actual": "55%",
+      "orden": 2
+    },
+    {
+      "id": "mos_q2_07",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(+) Precisión promedio de georreferenciación",
+      "linea_base": "78%",
+      "meta": "94%",
+      "actual": "88%",
+      "orden": 3
+    },
+    {
+      "id": "mos_q2_08",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(+) % direcciones corregidas automáticamente",
+      "linea_base": "0%",
+      "meta": "60%",
+      "actual": "38%",
+      "orden": 4
+    },
+    {
+      "id": "mos_q2_09",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(+) % reservas asignadas automáticamente",
+      "linea_base": "3%",
+      "meta": "40%",
+      "actual": "12%",
+      "orden": 1
+    },
+    {
+      "id": "mos_q2_10",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(+) % reservas asignadas correctamente",
+      "linea_base": "71%",
+      "meta": "92%",
+      "actual": "79%",
+      "orden": 2
+    },
+    {
+      "id": "mos_q2_11",
+      "equipoId": "eq_planificacion",
+      "q": "Q2",
+      "descripcion": "(–) OS no retiradas por error de planificación",
+      "linea_base": "340/sem",
+      "meta": "80/sem",
+      "actual": "210/sem",
+      "orden": 3
+    },
+    {
+      "id": "mos_q1_01",
+      "equipoId": "eq_planificacion",
+      "q": "Q1",
+      "descripcion": "% de rutas ejecutadas según lo planificado",
+      "linea_base": "0%",
+      "meta": "15%",
+      "actual": "11%",
+      "orden": 1
+    },
+    {
+      "id": "mos_q1_02",
+      "equipoId": "eq_planificacion",
+      "q": "Q1",
+      "descripcion": "% de reservas asignadas automáticamente",
+      "linea_base": "3%",
+      "meta": "10%",
+      "actual": "9%",
+      "orden": 2
+    }
+  ],
+  "iniciativas": [
+    {
+      "id": "sr",
+      "equipoId": "eq_planificacion",
+      "q": 2,
+      "producto": "Smart Retiros",
+      "emoji": "📦",
+      "nombre": "Smart Retiros",
+      "descripcion": "Automatizar la planificación de retiros con reservas validadas por capacidad, zona y disponibilidad operativa.",
+      "fechas": "15 Abr → 30 Jun",
+      "tag": "plan",
+      "label": "Dashboard + georreferencia reservas",
+      "activo": true,
+      "bar": {
+        "s": 0,
+        "e": 2,
+        "sp": 48,
+        "ep": 100
+      },
+      "entregables": [
+        {
+          "id": "ent_sr_01",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "sr",
+          "aplicacionId": "app_smart_retiros",
+          "q": 2,
+          "titulo": "API de reservas",
+          "descripcion": "Endpoint REST /api/v1/reservas con validación de capacidad disponible por courier y zona.",
+          "label": "API reservas",
+          "fechaCreacion": "2026-04-10",
+          "fechaInicio": "2026-04-15",
+          "fechaFin": "2026-04-30",
+          "estado": "done",
+          "activo": true,
+          "orden": 1
+        },
+        {
+          "id": "ent_sr_02",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "sr",
+          "aplicacionId": "app_blue_planner",
+          "q": 2,
+          "titulo": "Dashboard de retiros",
+          "descripcion": "Vista operativa con indicadores de reservas asignadas vs. pendientes en tiempo real.",
+          "label": "Dashboard",
+          "fechaCreacion": "2026-04-12",
+          "fechaInicio": "2026-05-01",
+          "fechaFin": "2026-05-22",
+          "estado": "in_progress",
+          "activo": true,
+          "orden": 2
+        },
+        {
+          "id": "ent_sr_03",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "sr",
+          "aplicacionId": "app_smart_retiros",
+          "q": 2,
+          "titulo": "Reglas de reasignación automática",
+          "descripcion": "Lógica para reasignar reservas cuando un courier no tiene capacidad disponible.",
+          "label": "Reasignación",
+          "fechaCreacion": "2026-05-03",
+          "fechaInicio": "2026-05-23",
+          "fechaFin": "2026-06-12",
+          "estado": "backlog",
+          "activo": true,
+          "orden": 3
+        }
+      ],
+      "mes_inicio": "Abril",
+      "mes_fin": "Junio",
+      "mos_asociados": [
+        "mos_q2_09",
+        "mos_q2_10",
+        "mos_q2_11"
+      ]
+    },
+    {
+      "id": "ou",
+      "equipoId": "eq_planificacion",
+      "q": 2,
+      "producto": "Optimización Última Milla",
+      "emoji": "⭐",
+      "nombre": "Optimización Última Milla",
+      "descripcion": "Construir el MVP del optimizador para última milla, priorizando factibilidad operativa y eficiencia de rutas.",
+      "fechas": "01 Abr → 30 Jun",
+      "tag": "plan",
+      "label": "MVP Optimización Base Valdivia + HU",
+      "activo": true,
+      "bar": {
+        "s": 0,
+        "e": 2,
+        "sp": 60,
+        "ep": 100
+      },
+      "entregables": [
+        {
+          "id": "ent_ou_01",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "ou",
+          "aplicacionId": "app_optimizador",
+          "q": 2,
+          "titulo": "Optimizador Valdivia — MVP",
+          "descripcion": "Motor de optimización de rutas para Base Valdivia con restricciones operativas reales.",
+          "label": "MVP Valdivia",
+          "fechaCreacion": "2026-03-28",
+          "fechaInicio": "2026-04-01",
+          "fechaFin": "2026-04-28",
+          "estado": "done",
+          "activo": true,
+          "orden": 1
+        },
+        {
+          "id": "ent_ou_02",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "ou",
+          "aplicacionId": "app_optimizador",
+          "q": 2,
+          "titulo": "Optimizador Hub Urbano — piloto",
+          "descripcion": "Extensión del optimizador para el hub urbano de Santiago, con validación en ruta real.",
+          "label": "Piloto HU",
+          "fechaCreacion": "2026-04-25",
+          "fechaInicio": "2026-05-01",
+          "fechaFin": "2026-05-30",
+          "estado": "in_progress",
+          "activo": true,
+          "orden": 2
+        },
+        {
+          "id": "ent_ou_03",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "ou",
+          "aplicacionId": "app_blue_planner",
+          "q": 2,
+          "titulo": "Dashboard de eficiencia de rutas",
+          "descripcion": "Vista de seguimiento de indicadores: OS/ruta, km recorridos, desviación vs. plan.",
+          "label": "Dashboard rutas",
+          "fechaCreacion": "2026-05-03",
+          "fechaInicio": "2026-06-01",
+          "fechaFin": "2026-06-25",
+          "estado": "backlog",
+          "activo": true,
+          "orden": 3
+        }
+      ],
+      "mes_inicio": "Abril",
+      "mes_fin": "Junio",
+      "mos_asociados": [
+        "mos_q2_01",
+        "mos_q2_02",
+        "mos_q2_03",
+        "mos_q2_04"
+      ]
+    },
+    {
+      "id": "ga",
+      "equipoId": "eq_planificacion",
+      "q": 2,
+      "producto": "Georreferenciación automática",
+      "emoji": "📍",
+      "nombre": "Georreferenciación automática",
+      "descripcion": "Levantar un motor de georreferenciación confiable que asigne coordenadas, hub y zona con alta precisión.",
+      "fechas": "01 Abr → 31 May",
+      "tag": "plan",
+      "label": "Diccionario Blue + cálculo Hub/zona",
+      "activo": true,
+      "bar": {
+        "s": 0,
+        "e": 1,
+        "sp": 85,
+        "ep": 100
+      },
+      "entregables": [
+        {
+          "id": "ent_ga_01",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "ga",
+          "aplicacionId": "app_diccionario_blue",
+          "q": 2,
+          "titulo": "Diccionario Blue v0.1",
+          "descripcion": "Primera versión del diccionario de direcciones normalizado con 180K registros y clasificación por calidad.",
+          "label": "Diccionario v0.1",
+          "fechaCreacion": "2026-03-30",
+          "fechaInicio": "2026-04-01",
+          "fechaFin": "2026-04-22",
+          "estado": "done",
+          "activo": true,
+          "orden": 1
+        },
+        {
+          "id": "ent_ga_02",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "ga",
+          "aplicacionId": "app_geosolver",
+          "q": 2,
+          "titulo": "Motor de cálculo Hub/Zona",
+          "descripcion": "Algoritmo de asignación automática de Hub operativo y zona a partir de coordenadas validadas.",
+          "label": "Motor Hub/Zona",
+          "fechaCreacion": "2026-04-18",
+          "fechaInicio": "2026-04-23",
+          "fechaFin": "2026-05-15",
+          "estado": "done",
+          "activo": true,
+          "orden": 2
+        },
+        {
+          "id": "ent_ga_03",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "ga",
+          "aplicacionId": "app_geosolver",
+          "q": 2,
+          "titulo": "Integración con flujo de OS",
+          "descripcion": "Conexión del motor de georreferenciación con el pipeline de creación de Órdenes de Servicio.",
+          "label": "Integración OS",
+          "fechaCreacion": "2026-05-10",
+          "fechaInicio": "2026-05-16",
+          "fechaFin": "2026-05-31",
+          "estado": "in_progress",
+          "activo": true,
+          "orden": 3
+        }
+      ],
+      "mes_inicio": "Abril",
+      "mes_fin": "Mayo",
+      "mos_asociados": [
+        "mos_q2_05",
+        "mos_q2_06",
+        "mos_q2_07",
+        "mos_q2_08"
+      ]
+    },
+    {
+      "id": "rv",
+      "equipoId": "eq_planificacion",
+      "q": 2,
+      "producto": "Red de Distribución v1",
+      "emoji": "🗺️",
+      "nombre": "Red de Distribución v1",
+      "descripcion": "Formalizar el catálogo de nodos y el modelo territorial que soportan la planificación nacional.",
+      "fechas": "01 Abr → 30 Jun",
+      "tag": "plan",
+      "label": "Catálogo nodos + modelo territorial",
+      "activo": true,
+      "bar": {
+        "s": 0,
+        "e": 2,
+        "sp": 40,
+        "ep": 85
+      },
+      "entregables": [
+        {
+          "id": "ent_rv_01",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "rv",
+          "aplicacionId": "app_red_dist",
+          "q": 2,
+          "titulo": "Catálogo de nodos activos",
+          "descripcion": "Registro formal de Bases y Hubs con atributos operativos: horario, capacidad, rutas de entrada/salida.",
+          "label": "Catálogo nodos",
+          "fechaCreacion": "2026-03-25",
+          "fechaInicio": "2026-04-01",
+          "fechaFin": "2026-04-25",
+          "estado": "done",
+          "activo": true,
+          "orden": 1
+        },
+        {
+          "id": "ent_rv_02",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "rv",
+          "aplicacionId": "app_red_dist",
+          "q": 2,
+          "titulo": "Modelo territorial",
+          "descripcion": "Estructura geopolítica de regiones, comunas y su asignación a hubs y zonas operativas de cobertura.",
+          "label": "Modelo territorial",
+          "fechaCreacion": "2026-04-20",
+          "fechaInicio": "2026-04-26",
+          "fechaFin": "2026-05-22",
+          "estado": "in_progress",
+          "activo": true,
+          "orden": 2
+        },
+        {
+          "id": "ent_rv_03",
+          "equipoId": "eq_planificacion",
+          "iniciativaId": "rv",
+          "aplicacionId": "app_blue_planner",
+          "q": 2,
+          "titulo": "Indicadores de cobertura",
+          "descripcion": "Dashboard con % de cobertura por región y alertas automáticas de zonas sin nodo asignado.",
+          "label": "Cobertura",
+          "fechaCreacion": "2026-05-18",
+          "fechaInicio": "2026-05-23",
+          "fechaFin": "2026-06-30",
+          "estado": "backlog",
+          "activo": true,
+          "orden": 3
+        }
+      ],
+      "mes_inicio": "Abril",
+      "mes_fin": "Junio",
+      "mos_asociados": [
+        "mos_q2_03",
+        "mos_q2_04"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "id": "stk_001",
+      "nombre": "Cristóbal Veas",
+      "area": "Operaciones",
+      "q": "ALL",
+      "capacidadKeys": [
+        "plan"
+      ],
+      "activo": true
+    },
+    {
+      "id": "stk_002",
+      "nombre": "Alejandra Díaz",
+      "area": "Data & Analytics",
+      "q": "ALL",
+      "capacidadKeys": [
+        "plan",
+        "red"
+      ],
+      "activo": true
+    },
+    {
+      "id": "stk_003",
+      "nombre": "Natalia Rojas",
+      "area": "Experiencia Cliente",
+      "q": "Q3",
+      "capacidadKeys": [
+        "plan",
+        "int"
+      ],
+      "activo": true
+    },
+    {
+      "id": "stk_004",
+      "nombre": "Rodrigo Carrasco",
+      "area": "Transporte",
+      "q": "Q2",
+      "capacidadKeys": [
+        "plan"
+      ],
+      "activo": true
+    },
+    {
+      "id": "stk_005",
+      "nombre": "Valentina Muñoz",
+      "area": "Tecnología",
+      "q": "ALL",
+      "capacidadKeys": [
+        "int",
+        "red"
+      ],
+      "activo": true
+    }
+  ],
+  "businessFlows": [
+    {
+      "id": "bf_001",
+      "titulo": "Modelo Geográfico",
+      "descripcionTarjeta": "Define cómo se estructura territorialmente la operación para asignar cobertura, hubs, bases y zonas de servicio.",
+      "contenido": "El modelo geográfico organiza la operación logística sobre una capa territorial común. Define regiones, comunas, hubs, bases, postas y zonas de cobertura para que la planificación, el ruteo y la operación hablen el mismo idioma.\n\nEste flujo de negocio habilita decisiones como la asignación de hub, la cobertura territorial de una base, la detección de vacíos operativos y la trazabilidad de cambios sobre el mapa logístico.\n\nTambién sirve como base para productos como Red de Distribución, Direcciones y optimización de rutas, porque todos dependen de una representación geográfica consistente.",
+      "confluenceUrl": "https://confluence.blue.cl/display/TEC/modelo-geografico",
+      "icono": "🗺️",
+      "color": "#0891B2",
+      "activo": true,
+      "orden": 1
+    },
+    {
+      "id": "bf_002",
+      "titulo": "Modelo Operativo",
+      "descripcionTarjeta": "Explica cómo se mueve la operación entre primera, media, troncal y última milla, junto con sus reglas y restricciones.",
+      "contenido": "El modelo operativo describe el flujo real de una orden dentro de Blue Express, desde el retiro o ingreso hasta su entrega final. Define etapas, responsables, restricciones, dependencias y eventos clave para que los equipos entiendan cómo se ejecuta el negocio.\n\nEste flujo de negocio permite alinear productos de planificación con la operación real, evitando diseñar soluciones desconectadas del terreno.\n\nSu documentación debe servir tanto para entender el proceso completo como para explicar dónde impacta cada producto del equipo dentro del ciclo operativo.",
+      "confluenceUrl": "https://confluence.blue.cl/display/TEC/modelo-operativo",
+      "icono": "⚙️",
+      "color": "#1B30CC",
+      "activo": true,
+      "orden": 2
+    },
+    {
+      "id": "bf_003",
+      "titulo": "Ciclo de Vida de una OS",
+      "descripcionTarjeta": "Traza el recorrido completo de una Orden de Servicio desde su creación hasta la entrega o devolución final.",
+      "contenido": "Una Orden de Servicio (OS) nace cuando el cliente confirma un envío y termina cuando se registra la entrega exitosa o la devolución definitiva. Entre ambos extremos existen más de 20 estados posibles.\n\nEntender el ciclo de vida de la OS es crítico para el equipo porque muchos de nuestros productos intervienen en distintos puntos: Smart Retiros actúa en la creación y asignación, el Optimizador en la secuenciación de rutas, y el Diccionario Blue en la validación de la dirección.",
+      "confluenceUrl": "https://confluence.blue.cl/display/TEC/ciclo-vida-os",
+      "icono": "📋",
+      "color": "#7C3AED",
+      "activo": true,
+      "orden": 3
+    }
+  ],
+  "salud": [
+    {
+      "id": "rsk_001",
+      "equipoId": "eq_planificacion",
+      "titulo": "Dependencia de datos legacy de direcciones",
+      "descripcion": "Gran parte de las direcciones históricas no están normalizadas ni georreferenciadas. Esto limita la cobertura efectiva del Diccionario Blue y afecta la precisión del motor Hub/Zona.",
+      "capacidadKey": "int",
+      "nivel": "alto",
+      "estado": "activo",
+      "probabilidad": "alta",
+      "impacto": "alto",
+      "plan_mitigacion": "Proceso de enriquecimiento masivo en lotes, priorizando comunas con mayor volumen de OS. Meta: 80% de cobertura antes del fin de Q2.",
+      "responsable": "Carlos Gallardo",
+      "fechaDeteccion": "2026-04-05",
+      "fechaRevision": "2026-05-15",
+      "activo": true
+    },
+    {
+      "id": "rsk_002",
+      "equipoId": "eq_planificacion",
+      "titulo": "Escalabilidad del optimizador con alto volumen OS",
+      "descripcion": "Las pruebas actuales del optimizador validan hasta 200 OS por base. En bases de alta demanda el volumen puede superar las 600 OS/día, degradando la performance.",
+      "capacidadKey": "plan",
+      "nivel": "medio",
+      "estado": "activo",
+      "probabilidad": "media",
+      "impacto": "alto",
+      "plan_mitigacion": "Diseñar prueba de carga con datos reales de la base más exigente antes del despliegue productivo. Evaluar particionamiento por zona.",
+      "responsable": "Ricardo Moscoso",
+      "fechaDeteccion": "2026-04-18",
+      "fechaRevision": "2026-05-30",
+      "activo": true
+    },
+    {
+      "id": "rsk_003",
+      "equipoId": "eq_planificacion",
+      "titulo": "Falta de datos operativos en zonas rurales extremas",
+      "descripcion": "Regiones como Aysén y Magallanes no tienen suficiente densidad de datos históricos. Esto impacta la precisión del modelo territorial y la cobertura del diccionario.",
+      "capacidadKey": "red",
+      "nivel": "medio",
+      "estado": "activo",
+      "probabilidad": "alta",
+      "impacto": "medio",
+      "plan_mitigacion": "Coordinar con Operaciones para mapear manualmente los nodos críticos de estas regiones. Incorporar en siguiente versión del modelo territorial.",
+      "responsable": "Javiera León",
+      "fechaDeteccion": "2026-04-22",
+      "fechaRevision": "2026-06-01",
+      "activo": true
+    },
+    {
+      "id": "rsk_004",
+      "equipoId": "eq_planificacion",
+      "titulo": "Baja adopción del dashboard por parte de operaciones",
+      "descripcion": "El equipo operativo tiene baja familiaridad con herramientas digitales de planificación. Riesgo de que el dashboard de Blue Planner no se use en producción.",
+      "capacidadKey": "plan",
+      "nivel": "bajo",
+      "estado": "mitigado",
+      "probabilidad": "media",
+      "impacto": "medio",
+      "plan_mitigacion": "Programa de capacitación presencial en las bases piloto. Designar referentes operativos por base para hacer seguimiento de uso.",
+      "responsable": "Javiera León",
+      "fechaDeteccion": "2026-03-15",
+      "fechaRevision": "2026-04-30",
+      "activo": true
+    }
+  ],
+  "capacitaciones": [
+    {
+      "id": "cap_001",
+      "equipoId": "eq_planificacion",
+      "titulo": "Introducción a Blue Planner",
+      "descripcion": "Visión general del dashboard de planificación: cómo leer los indicadores de reservas, interpretar el estado del día y navegar entre vistas.",
+      "tipo": "Video",
+      "duracion": "12 min",
+      "emoji": "📅",
+      "aplicacionId": "app_blue_planner",
+      "audiencia": "Operaciones",
+      "url": "https://drive.google.com/file/d/blueplanner-intro/view",
+      "activo": true,
+      "orden": 1
+    },
+    {
+      "id": "cap_002",
+      "equipoId": "eq_planificacion",
+      "titulo": "Smart Retiros: cómo funciona la asignación automática",
+      "descripcion": "Explica el algoritmo de asignación de reservas: qué datos consume, cómo prioriza couriers y qué pasa cuando no hay capacidad disponible.",
+      "tipo": "Tutorial",
+      "duracion": "15 min",
+      "emoji": "📦",
+      "aplicacionId": "app_smart_retiros",
+      "audiencia": "Operaciones / TI",
+      "url": "https://drive.google.com/file/d/smartretiros-tutorial/view",
+      "activo": true,
+      "orden": 2
+    },
+    {
+      "id": "cap_003",
+      "equipoId": "eq_planificacion",
+      "titulo": "Cómo usar Geosolver para validar una dirección",
+      "descripcion": "Guía paso a paso para ingresar, validar y corregir direcciones usando el motor de georreferenciación. Incluye casos de direcciones ambiguas y sin cobertura.",
+      "tipo": "Tutorial",
+      "duracion": "8 min",
+      "emoji": "🔍",
+      "aplicacionId": "app_geosolver",
+      "audiencia": "Atención al Cliente / Ops",
+      "url": "https://drive.google.com/file/d/geosolver-tutorial/view",
+      "activo": true,
+      "orden": 3
+    },
+    {
+      "id": "cap_004",
+      "equipoId": "eq_planificacion",
+      "titulo": "Diccionario Blue: estructura y niveles de calidad",
+      "descripcion": "Explica cómo está construido el Diccionario Blue, qué significa cada nivel de calidad (alta, media, baja) y cómo se actualiza.",
+      "tipo": "Referencia",
+      "duracion": "10 min",
+      "emoji": "📍",
+      "aplicacionId": "app_diccionario_blue",
+      "audiencia": "TI / Data",
+      "url": "https://confluence.blue.cl/display/TEC/diccionario-blue",
+      "activo": true,
+      "orden": 4
+    },
+    {
+      "id": "cap_005",
+      "equipoId": "eq_planificacion",
+      "titulo": "Seguimiento y monitoreo de rutas en el Optimizador",
+      "descripcion": "Cómo interpretar el dashboard de eficiencia de rutas: OS/ruta, km por ruta y desviación vs. plan. Guía para analistas y jefes de base.",
+      "tipo": "Guía",
+      "duracion": "5 min",
+      "emoji": "🚛",
+      "aplicacionId": "app_optimizador",
+      "audiencia": "Jefes de Base / Operaciones",
+      "url": "https://drive.google.com/file/d/optimizador-guia/view",
+      "activo": true,
+      "orden": 5
+    },
+    {
+      "id": "cap_006",
+      "equipoId": "eq_planificacion",
+      "titulo": "Modelo operativo de Red de Distribución",
+      "descripcion": "Qué son Postas, Bases y Hubs, cómo se relacionan entre sí y cómo se asigna la cobertura territorial. Documento base para el equipo.",
+      "tipo": "Documento",
+      "duracion": "15 min",
+      "emoji": "🗺️",
+      "aplicacionId": "app_red_dist",
+      "audiencia": "Equipo de Tecnología",
+      "url": "https://confluence.blue.cl/display/TEC/red-distribucion",
+      "activo": true,
+      "orden": 6
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev_q2_01",
+      "equipoId": "eq_planificacion",
+      "titulo": "Review Sprint 63",
+      "sprint": "63",
+      "fecha": "2026-04-01",
+      "q": "Q2",
+      "estado": "publicada",
+      "activo": true,
+      "fuente": "embebida",
+      "embedUrl": "https://docs.google.com/presentation/d/1RWMBwMxEKEctaT6YFhVmVTPFtkxTiNI3/edit",
+      "contenido": {
+        "items": []
+      },
+      "indicadores": [
+        {
+          "titulo": "Velocidad del equipo",
+          "contexto": "48 SP completados — referencia base: 45 SP/sprint",
+          "url": "https://placehold.co/1280x720/png/0A1650/2BB8D4?text=Velocidad+SP63%0A48+SP"
+        },
+        {
+          "titulo": "Cobertura Q2",
+          "contexto": "4 iniciativas activas · 0 bloqueadas · 0 completadas",
+          "url": "https://placehold.co/1280x720/0A1650/B3D9FF?text=Cobertura+Q2"
+        }
+      ],
+      "resultados": [
+        {
+          "titulo": "Smart Retiros — API disponible en QA",
+          "contexto": "Endpoint /reservas con validación de capacidad y zona operativo en ambiente QA.",
+          "url": "https://placehold.co/1280x720/0A1650/A5F3FC?text=Smart+Retiros+API+disponible+en+QA"
+        },
+        {
+          "titulo": "Diccionario Blue — datos históricos cargados",
+          "contexto": "180K direcciones normalizadas con clasificación inicial de calidad.",
+          "url": "https://placehold.co/1280x720/0A1650/A5F3FC?text=Diccionario+Blue+datos+histricos+carg"
+        }
+      ],
+      "demo": [
+        "Demo Smart Retiros — API de reservas",
+        "Demo carga masiva Diccionario Blue"
+      ],
+      "riesgos": [
+        {
+          "titulo": "Calidad de datos legacy",
+          "contexto": "Direcciones históricas sin normalización dificultan la georreferenciación automática.",
+          "url": "https://placehold.co/1280x720/0A1650/FCA5A5?text=Riesgo+alto",
+          "nivel": "alto"
+        }
+      ],
+      "mos_actuals": {
+        "mos_q2_01": "47 OS/ruta",
+        "mos_q2_05": "14%",
+        "mos_q2_09": "12%"
+      }
+    },
+    {
+      "id": "rev_q2_02",
+      "equipoId": "eq_planificacion",
+      "titulo": "Review Sprint 64",
+      "sprint": "64",
+      "fecha": "2026-04-15",
+      "q": "Q2",
+      "estado": "publicada",
+      "activo": true,
+      "fuente": "interna",
+      "contenido": {
+        "items": [
+          {
+            "tipo": "resumen",
+            "titulo": "Resumen Sprint 64",
+            "texto": "52 SP completados — mejor sprint del Q2. Se entregó el MVP del Optimizador de Rutas para Base Valdivia (rutas óptimas en < 2s) y se dejó operativo el Motor de Cálculo Hub/Zona con 94% de precisión."
+          },
+          {
+            "tipo": "highlight",
+            "titulo": "Hito: Optimizador Valdivia en producción",
+            "texto": "El Optimizador genera secuencias de entrega óptimas para hasta 80 OS simultáneas. Primer despliegue productivo del Q2. Siguientes pasos: piloto en Hub Urbano de Santiago."
+          },
+          {
+            "tipo": "metricas",
+            "titulo": "Avance de MOS",
+            "texto": "OS/ruta: 49 (LB: 42 | Meta: 52). Fallo por direcciones: 13% (LB: 18% | Meta: 10%). Reservas automáticas: 16% (LB: 3% | Meta: 40%)."
+          }
+        ]
+      },
+      "indicadores": [
+        {
+          "titulo": "Velocidad del equipo",
+          "contexto": "52 SP completados — mejor sprint del Q hasta la fecha",
+          "url": "https://placehold.co/1280x720/png/0A1650/86EFAC?text=Velocidad+SP64%0A52+SP"
+        },
+        {
+          "titulo": "Reservas automatizadas",
+          "contexto": "12% de asignación automática — partió en 3% a inicio de Q2",
+          "url": "https://placehold.co/1280x720/0A1650/B3D9FF?text=Reservas+automatizadas"
+        }
+      ],
+      "resultados": [
+        {
+          "titulo": "Optimizador Valdivia — MVP completado",
+          "contexto": "Genera rutas óptimas en < 2s para hasta 80 OS simultáneas con restricciones reales.",
+          "url": "https://placehold.co/1280x720/0A1650/A5F3FC?text=Optimizador+Valdivia+MVP+completado"
+        },
+        {
+          "titulo": "Motor Hub/Zona operativo",
+          "contexto": "Calcula hub y zona asignados a partir de coordenadas con 94% de precisión.",
+          "url": "https://placehold.co/1280x720/0A1650/A5F3FC?text=Motor+HubZona+operativo"
+        }
+      ],
+      "demo": [
+        "Demo Optimizador Valdivia",
+        "Demo Motor Hub/Zona",
+        "Demo Dashboard retiros SP64"
+      ],
+      "riesgos": [
+        {
+          "titulo": "Cobertura hubs rurales",
+          "contexto": "Datos faltantes para zonas extremas (Aysén, Magallanes). Impacta precisión del motor.",
+          "url": "https://placehold.co/1280x720/0A1650/FCA5A5?text=Riesgo+medio",
+          "nivel": "medio"
+        },
+        {
+          "titulo": "Escalabilidad del optimizador",
+          "contexto": "Performance no validada con > 200 OS por base. Requiere test de carga antes del despliegue.",
+          "url": "https://placehold.co/1280x720/0A1650/FCA5A5?text=Riesgo+medio",
+          "nivel": "medio"
+        }
+      ],
+      "mos_actuals": {
+        "mos_q2_01": "49 OS/ruta",
+        "mos_q2_05": "13%",
+        "mos_q2_09": "16%",
+        "mos_q2_07": "88%"
+      }
+    },
+    {
+      "id": "rev_q2_03",
+      "equipoId": "eq_planificacion",
+      "titulo": "Review Sprint 65",
+      "sprint": "65",
+      "fecha": "2026-04-29",
+      "q": "Q2",
+      "estado": "borrador",
+      "activo": true,
+      "fuente": "interna",
+      "contenido": {
+        "items": [
+          {
+            "tipo": "resumen",
+            "titulo": "Resumen Sprint 65",
+            "texto": "50 SP completados. Sprint de consolidación enfocado en la integración de Geosolver con el pipeline de OS (70% completo) y la primera versión del modelo territorial nacional."
+          },
+          {
+            "tipo": "highlight",
+            "titulo": "Georreferenciación al 88% de precisión",
+            "texto": "El motor de georreferenciación alcanzó 88% de precisión promedio, superando la línea base (78%) en 10 puntos. La meta del Q2 es 94%. La integración con OS se completará en los próximos 5 días hábiles."
+          },
+          {
+            "tipo": "metricas",
+            "titulo": "Avance de MOS",
+            "texto": "OS/ruta: 51 (LB: 42 | Meta: 52). Fallo por direcciones: 12% (LB: 18% | Meta: 10%). Reservas automáticas: 19% (LB: 3% | Meta: 40%). Calidad alta: 55% (LB: 42% | Meta: 70%)."
+          }
+        ]
+      },
+      "indicadores": [
+        {
+          "titulo": "Velocidad del equipo",
+          "contexto": "50 SP completados — dentro del rango esperado",
+          "url": "https://placehold.co/1280x720/0A1650/B3D9FF?text=Velocidad+del+equipo"
+        },
+        {
+          "titulo": "Georreferenciación",
+          "contexto": "88% de precisión promedio — 6 puntos por encima de la línea base",
+          "url": "https://placehold.co/1280x720/0A1650/B3D9FF?text=Georreferenciacin"
+        }
+      ],
+      "resultados": [
+        {
+          "titulo": "Integración Geosolver con flujo de OS en curso",
+          "contexto": "70% de la integración completada. Testing en ambiente QA esta semana.",
+          "url": "https://placehold.co/1280x720/0A1650/A5F3FC?text=Integracin+Geosolver+con+flujo+de+OS+en"
+        },
+        {
+          "titulo": "Modelo territorial — primera versión lista",
+          "contexto": "Estructura de regiones/comunas cargada. Falta validación de 3 regiones del sur.",
+          "url": "https://placehold.co/1280x720/0A1650/A5F3FC?text=Modelo+territorial+primera+versin+lis"
+        }
+      ],
+      "demo": [
+        "Demo integración Geosolver + OS",
+        "Demo modelo territorial interactivo"
+      ],
+      "riesgos": [
+        {
+          "titulo": "Deuda técnica en API de reservas",
+          "contexto": "La validación de capacidad no cubre el caso borde de couriers con múltiples zonas asignadas.",
+          "url": "https://placehold.co/1280x720/0A1650/FCA5A5?text=Riesgo+bajo",
+          "nivel": "bajo"
+        }
+      ],
+      "mos_actuals": {
+        "mos_q2_01": "51 OS/ruta",
+        "mos_q2_05": "12%",
+        "mos_q2_09": "19%",
+        "mos_q2_06": "55%"
+      }
+    }
+  ]
+}

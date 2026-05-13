@@ -1,0 +1,145 @@
+/* ===== REVIEW PRESENTATION OVERRIDE STYLES ===== */
+
+:root {
+  --review-navy: #0A1650;
+  --review-navy-dark: #060D3D;
+  --review-blue-strong: #0032A0;
+  --review-blue-medium: #1E56A0;
+  --review-pink: #D4A5C5;
+  --review-green: #B8D4B8;
+  --review-beige: #E8D9C3;
+  --review-gray: #E8E8E8;
+}
+
+/* Mejorar contenido de slides con fondo blanco */
+div[style*="flex: 1"][style*="overflowY: auto"][style*="padding: 48px 64px"] {
+  background: #F5F5F5 !important;
+}
+
+/* Mejora de tabla de contenidos */
+div[style*="gap: 10"][style*="maxWidth: 480"] {
+  max-width: 600px !important;
+}
+
+div[style*="gap: 10"][style*="maxWidth: 480"] button {
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  background: rgba(255,255,255,0.05) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+div[style*="gap: 10"][style*="maxWidth: 480"] button:hover {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  transform: translateX(6px) !important;
+}
+
+/* Grid de indicadores mejorado */
+div[style*="gridTemplateColumns: repeat(auto-fit, minmax(240px"][style*="gap: 14"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 20px !important;
+}
+
+div[style*="gridTemplateColumns: repeat(auto-fit, minmax(240px"][style*="gap: 14"] > div {
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  padding: 20px 18px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.3s ease !important;
+}
+
+div[style*="gridTemplateColumns: repeat(auto-fit, minmax(240px"][style*="gap: 14"] > div:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0, 50, 160, 0.15) !important;
+}
+
+/* Grid de demo cards mejorado */
+div[style*="gridTemplateColumns: repeat(auto-fit, minmax(260px"][style*="gap: 16"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 18px !important;
+}
+
+div[style*="gridTemplateColumns: repeat(auto-fit, minmax(260px"][style*="gap: 16"] > div {
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%) !important;
+  border: 1px solid rgba(0, 50, 160, 0.08) !important;
+  padding: 18px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.3s ease !important;
+}
+
+div[style*="gridTemplateColumns: repeat(auto-fit, minmax(260px"][style*="gap: 16"] > div:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 28px rgba(0, 50, 160, 0.2) !important;
+  border-color: var(--review-blue-strong) !important;
+}
+
+/* Tablas de resultados y riesgos mejoradas */
+div[style*="width: min(100%, 920px)"][style*="margin: 0 auto"] {
+  border-radius: 12px !important;
+  background: #fff !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden !important;
+}
+
+div[style*="width: min(100%, 940px)"][style*="margin: 0 auto"] {
+  border-radius: 12px !important;
+  background: #fff !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden !important;
+}
+
+/* Headers de tabla mejorados */
+div[style*="background: rgba(255,255,255,0.05)"][style*="borderBottom: 1px solid rgba"] {
+  background: linear-gradient(135deg, var(--review-navy) 0%, var(--review-navy-dark) 100%) !important;
+  color: #fff !important;
+}
+
+/* Filas de tabla mejoradas */
+div[style*="borderTop: index > 0"] {
+  background: #fff !important;
+  border-bottom: 1px solid #F0F4F8 !important;
+  padding: 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+div[style*="borderTop: index > 0"]:hover {
+  background: #F8FAFC !important;
+}
+
+/* Badges de estado mejorados */
+div[style*="fontSize: 13"][style*="fontWeight: 700"][style*="letterSpacing: '0.05em'"][style*="textTransform: 'uppercase'"] {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  background: #E8DCC3;
+  color: #0A1650;
+}
+
+/* Roadmap box mejorado */
+div[style*="background: '#F8FAFF'"][style*="borderRadius: 20"][style*="padding: 22"][style*="border: '1px solid rgba"] {
+  background: linear-gradient(135deg, #fff 0%, #F8FAFC 100%) !important;
+  border-radius: 12px !important;
+  border-left: 6px solid var(--review-blue-medium) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Mejoras generales de títulos y textos */
+div[style*="fontSize: 30"][style*="color: '#fff'"] {
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Indicador vacío mejorado */
+p[style*="fontSize: 14"][style*="color: 'rgba(255,255,255,0.2)'"] {
+  text-align: center;
+  padding: 32px;
+  font-style: italic;
+}

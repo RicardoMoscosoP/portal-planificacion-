@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Génesis - Reviews</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0A1650;
+            --navy-dark: #060D3D;
+            --blue-strong: #0032A0;
+            --blue-medium: #1E56A0;
+            --color-pink: #D4A5C5;
+            --color-green: #B8D4B8;
+            --color-beige: #E8D9C3;
+            --color-gray: #E8E8E8;
+            --bg-corporate: #F5F5F5;
+            --text-dark: #0A1650;
+            --text-light: #666;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--white);
+            color: var(--text-dark);
+        }
+
+        /* ===== GRILLA DE REVIEWS ===== */
+        .reviews-grid-container {
+            padding: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--blue-strong);
+            line-height: 1.2;
+        }
+
+        .title-section {
+            margin-bottom: 3rem;
+        }
+
+        .title-section h1 {
+            font-size: 2rem;
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .title-section p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .reviews-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .reviews-table thead {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .reviews-table th {
+            padding: 1.25rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reviews-table td {
+            padding: 1.25rem;
+            border-bottom: 1px solid #E0E0E0;
+            font-size: 0.95rem;
+        }
+
+        .reviews-table tbody tr:hover {
+            background: #F8F8F8;
+        }
+
+        .review-row {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .review-row:hover {
+            box-shadow: inset 0 0 20px rgba(0, 50, 160, 0.05);
+        }
+
+        .btn-execute {
+            background: var(--blue-strong);
+            color: var(--white);
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-execute:hover {
+            background: var(--blue-medium);
+        }
+
+        /* ===== PRESENTATION MODE ===== */
+        .presentation-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg-corporate);
+        }
+
+        .presentation-header {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+            color: var(--white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--blue-medium);
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        .header-logo {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.3;
+            color: var(--white);
+        }
+
+        .header-info {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-meta {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.75);
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1.5px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+            width: 200px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--blue-medium);
+            width: 20%;
+            transition: width 0.3s ease;
+        }
+
+        .current-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.4rem 1rem;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .nav-counter {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .exit-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--white);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .exit-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ===== SLIDE CONTENT ===== */
+        .slide-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background: var(--bg-corporate);
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 1200px;
+            padding: 3rem 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* TABLA DE CONTENIDOS SLIDE */
+        .toc-container {
+            text-align: center;
+        }
+
+        .toc-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 3rem;
+            letter-spacing: -0.5px;
+        }
+
+        .toc-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .toc-item {
+            padding: 1.25rem 2rem;
+            background: var(--white);
+            border-left: 5px solid var(--blue-medium);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .toc-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 50, 160, 0.1);
+            transform: translateX(8px);
+        }
+
+        .toc-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--blue-strong);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .toc-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--navy);
+            text-align: left;
+        }
+
+        /* SECTION HEADER */
+        .section-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: var(--blue-medium);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
+        }
+
+        .section-desc {
+            font-size: 1rem;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* INDICADORES */
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .indicator-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 4px;
+            border-left: 6px solid var(--blue-medium);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .indicator-card.alt {
+            border-left-color: var(--color-pink);
+        }
+
+        .indicator-badge {
+            display: inline-block;
+            background: var(--color-beige);
+            color: var(--navy);
+            padding: 0.35rem 0.8rem;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .indicator-card.alt .indicator-badge {
+            background: var(--color-pink);
+            color: var(--white);
+        }
+
+        .indicator-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.75rem;
+        }
+
+        .indicator-text {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* TABLA GENERAL */
+        .results-table {
+            background: var(--white);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-top: 1.5rem;
+        }
+
+        .results-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .results-table thead {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .results-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .results-table td {
+            padding: 1rem;
+            color: var(--text-dark);
+            border-bottom: 1px solid #E8E8E8;
+        }
+
+        .results-table tbody tr:hover {
+            background: #FAFAFA;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: var(--color-beige);
+            color: var(--navy);
+            padding: 0.4rem 0.8rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* DEMO CARDS */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .demo-card {
+            background: var(--white);
+            padding: 1.75rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .demo-card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.75rem;
+        }
+
+        .demo-card-text {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        /* ROADMAP SECTION */
+        .roadmap-box {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 4px;
+            border-left: 6px solid var(--blue-medium);
+            margin-top: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .roadmap-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 1.5rem;
+        }
+
+        .roadmap-text {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .mos-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .mos-table th {
+            background: var(--navy);
+            color: var(--white);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border: none;
+        }
+
+        .mos-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #DDD;
+            color: var(--text-dark);
+        }
+
+        .mos-table tbody tr:hover {
+            background: #FAFAFA;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .indicators-grid, .demo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .slide-content {
+                padding: 2rem 2.5rem;
+            }
+
+            .section-title, .toc-title {
+                font-size: 1.75rem;
+            }
+
+            .toc-list {
+                gap: 0.75rem;
+            }
+
+            .toc-item {
+                padding: 1rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .presentation-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .header-nav {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .slide-content {
+                padding: 1.5rem;
+            }
+
+            .section-title, .toc-title {
+                font-size: 1.25rem;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toc-item {
+                padding: 0.75rem 1rem;
+                gap: 1rem;
+            }
+
+            .toc-number {
+                min-width: 35px;
+                font-size: 1rem;
+            }
+
+            .toc-text {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* HIDDEN CLASS */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== GRILLA DE REVIEWS ===== -->
+    <div id="gridView" class="reviews-grid-container">
+        <div class="logo-section">
+            <div class="logo">Blue<br>express<br>copec</div>
+        </div>
+
+        <div class="title-section">
+            <h1>Reviews Disponibles</h1>
+            <p>Portafolio Distribución - Planificación del Transporte</p>
+        </div>
+
+        <table class="reviews-table">
+            <thead>
+                <tr>
+                    <th>Seleccionar</th>
+                    <th>Título</th>
+                    <th>Quarter</th>
+                    <th>Sprint</th>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="review-row">
+                    <td><input type="radio" name="review"></td>
+                    <td><strong>Review SP64</strong></td>
+                    <td>Q2</td>
+                    <td>64</td>
+                    <td>2026-04-03</td>
+                    <td>Review Interna</td>
+                    <td><button class="btn-execute" onclick="startPresentation()">Ejecutar</button></td>
+                </tr>
+                <tr class="review-row">
+                    <td><input type="radio" name="review"></td>
+                    <td><strong>Review SP63</strong></td>
+                    <td>Q2</td>
+                    <td>63</td>
+                    <td>2026-04-01</td>
+                    <td>URL embebida</td>
+                    <td><button class="btn-execute" onclick="startPresentation()">Ejecutar</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ===== PRESENTATION MODE ===== -->
+    <div id="presentationView" class="presentation-wrapper hidden">
+        <!-- HEADER -->
+        <div class="presentation-header">
+            <div class="header-left">
+                <div class="header-logo">Blue<br>express copec</div>
+                <div class="header-info">
+                    <div class="header-title">Portafolio Distribución - Planificación del Transporte</div>
+                    <div class="header-meta">
+                        <span>Q2 · ABR-JUN 2026</span>
+                        <span>SPRINT 65</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="current-section" id="currentSectionLabel">Tabla de Contenidos</div>
+
+            <div class="header-nav">
+                <div class="nav-counter"><span id="currentSlide">1</span> / <span id="totalSlides">6</span></div>
+                <button class="nav-btn" id="prevBtn" onclick="previousSlide()">‹</button>
+                <button class="nav-btn" id="nextBtn" onclick="nextSlide()">›</button>
+                <button class="exit-btn" onclick="exitPresentation()">Salir</button>
+            </div>
+        </div>
+
+        <!-- SLIDES -->
+        <div class="slide-container" onclick="nextSlide()">
+
+            <!-- SLIDE 0: TABLA DE CONTENIDOS -->
+            <div class="slide active">
+                <div class="slide-content">
+                    <div class="toc-container">
+                        <h2 class="toc-title">Tabla de Contenidos</h2>
+                        <ul class="toc-list">
+                            <li class="toc-item">
+                                <div class="toc-number">1</div>
+                                <div class="toc-text">Indicadores</div>
+                            </li>
+                            <li class="toc-item">
+                                <div class="toc-number">2</div>
+                                <div class="toc-text">Resultados del Sprint</div>
+                            </li>
+                            <li class="toc-item">
+                                <div class="toc-number">3</div>
+                                <div class="toc-text">Demo</div>
+                            </li>
+                            <li class="toc-item">
+                                <div class="toc-number">4</div>
+                                <div class="toc-text">Riesgos</div>
+                            </li>
+                            <li class="toc-item">
+                                <div class="toc-number">5</div>
+                                <div class="toc-text">Próximos Pasos</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 1: INDICADORES -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="section-header">
+                        <div class="section-label">01 · Indicadores</div>
+                        <h1 class="section-title">Resumen Ejecutivo</h1>
+                        <p class="section-desc">Avance reportado por capacidad del equipo Planificación</p>
+                    </div>
+
+                    <div class="indicators-grid">
+                        <div class="indicator-card">
+                            <div class="indicator-badge">Planificación</div>
+                            <h3 class="indicator-title">Velocidad del equipo</h3>
+                            <p class="indicator-text">52 SP completados en el sprint actual, representando el mejor desempeño del Q2 hasta la fecha.</p>
+                        </div>
+                        <div class="indicator-card alt">
+                            <div class="indicator-badge">Planificación</div>
+                            <h3 class="indicator-title">Reservas automatizadas</h3>
+                            <p class="indicator-text">12% de asignación automática, crecimiento significativo desde el 3% al inicio de Q2.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: RESULTADOS -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="section-header">
+                        <div class="section-label">02 · Resultados del Sprint</div>
+                        <h1 class="section-title">Entregables Completados</h1>
+                        <p class="section-desc">Estado actual de implementaciones por capacidad</p>
+                    </div>
+
+                    <div class="results-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Capacidad</th>
+                                    <th>Entregable</th>
+                                    <th>Compromiso</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="indicator-badge">Planificación</span></td>
+                                    <td><strong>Optimizador Valdivia — MVP</strong></td>
+                                    <td>Genera rutas óptimas en < 2s para hasta 80 OS con restricciones reales</td>
+                                    <td><span class="status-badge">Pendiente</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="indicator-badge">Planificación</span></td>
+                                    <td><strong>Motor Hub/Zona operativo</strong></td>
+                                    <td>Calcula hub y zona con 94% de precisión desde coordenadas</td>
+                                    <td><span class="status-badge">Pendiente</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: DEMO -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="section-header">
+                        <div class="section-label">03 · Demo</div>
+                        <h1 class="section-title">Visualización de Avances</h1>
+                        <p class="section-desc">Demostraciones y apoyos visuales del sprint</p>
+                    </div>
+
+                    <div class="demo-grid">
+                        <div class="demo-card">
+                            <h3 class="demo-card-title">Optimizador Valdivia</h3>
+                            <p class="demo-card-text">Generación de rutas optimizadas en tiempo real</p>
+                        </div>
+                        <div class="demo-card">
+                            <h3 class="demo-card-title">Motor Hub/Zona</h3>
+                            <p class="demo-card-text">Asignación automática de ubicaciones geográficas</p>
+                        </div>
+                        <div class="demo-card">
+                            <h3 class="demo-card-title">Dashboard Retiros</h3>
+                            <p class="demo-card-text">Visualización de métricas operacionales en vivo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: RIESGOS -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="section-header">
+                        <div class="section-label">04 · Riesgos</div>
+                        <h1 class="section-title">Factores Críticos</h1>
+                        <p class="section-desc">Riesgos principales que condicionan el siguiente tramo</p>
+                    </div>
+
+                    <div class="results-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Capacidad</th>
+                                    <th>Riesgo</th>
+                                    <th>Detalle</th>
+                                    <th>Impacto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="indicator-badge">Planificación</span></td>
+                                    <td><strong>Cobertura hubs rurales</strong></td>
+                                    <td>Datos faltantes para zonas extremas (Aysén, Magallanes)</td>
+                                    <td><span class="status-badge">Medio</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="indicator-badge">Planificación</span></td>
+                                    <td><strong>Escalabilidad optimizer</strong></td>
+                                    <td>Performance no validada con > 200 OS por base</td>
+                                    <td><span class="status-badge">Medio</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: PRÓXIMOS PASOS -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="section-header">
+                        <div class="section-label">05 · Próximos Pasos</div>
+                        <h1 class="section-title">Roadmap</h1>
+                        <p class="section-desc">Cierre ejecutivo con hitos y seguimiento</p>
+                    </div>
+
+                    <div class="roadmap-box">
+                        <h3 class="roadmap-title">Roadmap General + MOS</h3>
+                        <p class="roadmap-text">La review reutiliza la misma dinámica visible en Inicio para navegar entre quarter, roadmap y Measure of Success.</p>
+
+                        <table class="mos-table">
+                            <thead>
+                                <tr>
+                                    <th>Bet / LVT</th>
+                                    <th>MOS</th>
+                                    <th>Base</th>
+                                    <th>Meta</th>
+                                    <th>Real</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Optimizador de Rutas</strong></td>
+                                    <td>Productividad (OS/ruta)</td>
+                                    <td>42</td>
+                                    <td><strong>52</strong></td>
+                                    <td>47</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>% rutas según plan</td>
+                                    <td>0%</td>
+                                    <td><strong>15%</strong></td>
+                                    <td>11%</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>% reservas automatizadas</td>
+                                    <td>3%</td>
+                                    <td>—</td>
+                                    <td>9%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const sectionLabels = [
+            'Tabla de Contenidos',
+            'Indicadores',
+            'Resultados del Sprint',
+            'Demo',
+            'Riesgos',
+            'Próximos Pasos'
+        ];
+
+        let currentIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('currentSectionLabel').textContent = sectionLabels[index];
+            document.getElementById('progressFill').style.width = ((index + 1) / totalSlides * 100) + '%';
+
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentIndex < totalSlides - 1) {
+                currentIndex++;
+                showSlide(currentIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showSlide(currentIndex);
+            }
+        }
+
+        function startPresentation() {
+            document.getElementById('gridView').classList.add('hidden');
+            document.getElementById('presentationView').classList.remove('hidden');
+            showSlide(0);
+        }
+
+        function exitPresentation() {
+            if (confirm('¿Salir de la presentación?')) {
+                currentIndex = 0;
+                document.getElementById('presentationView').classList.add('hidden');
+                document.getElementById('gridView').classList.remove('hidden');
+                showSlide(0);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+            if (e.key === 'Escape') exitPresentation();
+        });
+
+        showSlide(0);
+    </script>
+</body>
+</html>
