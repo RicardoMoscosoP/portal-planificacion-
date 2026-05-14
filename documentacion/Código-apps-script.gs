@@ -518,15 +518,29 @@ function obtenerUsuarios() {
 }
 
 /**
- * ESCRITURA — Actualiza campos de un usuario en 'usuarios/{userId}'.
- * @param {string} userId - ID del documento del usuario
- * @param {Object} campos - Campos a actualizar (se sobreescribe el doc completo)
+ * ESCRITURA — Crea o actualiza (merge) un usuario en 'usuarios/{userId}'.
+ * Usa updateMask para actualizar SOLO los campos recibidos, sin tocar el resto.
+ * Casos de uso:
+ *   - Pre-registro completo: actualizarUsuario(email, { _id, email, nombre, rol, ... })
+ *   - Cambio de rol:         actualizarUsuario(uid, { rol: 'admin', canConfigure: true })
+ *   - Toggle activo:         actualizarUsuario(uid, { activo: false })
+ * @param {string} userId - ID del documento (puede ser uid de Firebase o email)
+ * @param {Object} campos - Campos a escribir (solo estos se tocan en Firestore)
  * Retorna JSON string { ok } o { ok: false, error }
  */
 function actualizarUsuario(userId, campos) {
   try {
     var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, 'https://www.googleapis.com/auth/datastore');
-    firestoreSet('usuarios', userId, campos, token);
+    var keys = Object.keys(campos).filter(function(k) { return Object.prototype.hasOwnProperty.call(campos, k); });
+    var maskQuery = keys.map(function(k) { return 'updateMask.fieldPaths=' + encodeURIComponent(k); }).join('&');
+    var url = 'https://firestore.googleapis.com/v1/projects/' + CONFIG.project_id + '/databases/(default)/documents/usuarios/' + encodeURIComponent(userId) + '?' + maskQuery;
+    UrlFetchApp.fetch(url, {
+      method: 'patch',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + token },
+      payload: JSON.stringify({ fields: objectToFields(campos) }),
+      muteHttpExceptions: true
+    });
     return JSON.stringify({ ok: true });
   } catch(e) {
     return JSON.stringify({ ok: false, error: e.toString() });
@@ -549,7 +563,7 @@ function exportarDatos(portafolioId) {
     } else {
       portafoliosList = firestoreGetCollectionT('portafolios', token);
     }
-    var COLECCIONES_EQUIPO = ['config', 'equipo', 'capacidades', 'stakeholders', 'aplicaciones', 'bets', 'iniciativas', 'noticias', 'capacitaciones', 'reviews', 'business_flows'];
+    var COLECCIONES_EQUIPO = ['config', 'miembros', 'capacidades', 'stakeholders', 'aplicaciones', 'bets', 'iniciativas', 'capacitaciones', 'reviews', 'businessFlows', 'salud'];
     var result = portafoliosList.map(function(port) {
       var equipos = firestoreGetCollectionT('portafolios/' + port.id + '/equipos', token);
       var equiposConDatos = equipos.map(function(eq) {

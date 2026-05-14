@@ -235,7 +235,7 @@ function createDraftFromReview(review: Review): ReviewDraft {
     q: review.q ?? 'Q2',
     estado: review.estado ?? 'borrador',
     activo: review.activo ?? true,
-    fuente: review.fuente ?? 'interna',
+    fuente: review.fuente ?? 'embebida',
     embedUrl: review.embedUrl ?? '',
     jiraPanelUrl: review.jiraPanelUrl ?? '',
   };
@@ -511,11 +511,11 @@ const ReviewMockupWorkspace = forwardRef<ReviewWorkspaceHandle, {
         <div style={{ marginTop: 10 }}>
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#5B6C9E', fontFamily: 'Manrope, sans-serif', marginBottom: 6 }}>Tipo de review</div>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => setDraft(prev => ({ ...prev, fuente: 'interna' }))} style={{ padding: '7px 10px', borderRadius: 8, border: `1px solid ${draft.fuente === 'interna' ? '#BFDBFE' : '#D8DEF0'}`, background: draft.fuente === 'interna' ? '#EFF6FF' : '#fff', color: draft.fuente === 'interna' ? '#1D4ED8' : '#475569', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>Review interna</button>
+            <button type="button" disabled title="Review interna desactivada temporalmente" style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #D8DEF0', background: '#F8FAFC', color: '#CBD5E1', fontSize: 11, fontWeight: 700, flexShrink: 0, cursor: 'not-allowed' }}>Review interna</button>
             <button type="button" onClick={() => setDraft(prev => ({ ...prev, fuente: 'embebida' }))} style={{ padding: '7px 10px', borderRadius: 8, border: `1px solid ${draft.fuente === 'embebida' ? '#BFDBFE' : '#D8DEF0'}`, background: draft.fuente === 'embebida' ? '#EFF6FF' : '#fff', color: draft.fuente === 'embebida' ? '#1D4ED8' : '#475569', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>URL review (embebida)</button>
             {draft.fuente === 'embebida' && (
               <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <input value={draft.embedUrl} onChange={event => setDraft(prev => ({ ...prev, embedUrl: event.target.value }))} placeholder="URL de Google Slides o PPT pública" style={{ border: '1px solid #BFDBFE', borderRadius: 8, padding: '7px 10px', background: '#fff', fontSize: 12, fontWeight: 600, width: '100%', boxSizing: 'border-box' as const }} />
+                <input value={draft.embedUrl} onChange={event => setDraft(prev => ({ ...prev, embedUrl: event.target.value }))} placeholder="https://docs.google.com/presentation/d/1RWMBwMxEKEctaT6YFhVmVTPFtkxTiNI3/edit?slide=id.g3b989720807_0_37" style={{ border: '1px solid #BFDBFE', borderRadius: 8, padding: '7px 10px', background: '#fff', fontSize: 12, fontWeight: 600, width: '100%', boxSizing: 'border-box' as const }} />
                 <span style={{ fontSize: 10, color: '#64748B' }}>Ingresa aquí la URL de la presentación (Google Slides, PPT pública, etc.)</span>
               </div>
             )}

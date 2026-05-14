@@ -48,6 +48,20 @@ export default function Capacitaciones({ data }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
 
+  // Mapa de apps por id para lookup rápido
+  const appsMap = Object.fromEntries((data.aplicaciones ?? []).map(a => [a.id, a]));
+  // Mapa de capacidades por key
+  const capsMap = Object.fromEntries((data.capacidades ?? []).map(c => [c.key, c]));
+
+  // Resuelve los ids de aplicaciones de una capacitación (soporta legacy aplicacionId)
+  function getApps(cap: { aplicacionId?: string; aplicacionIds?: string[] }) {
+    const ids = [
+      ...(cap.aplicacionIds ?? []),
+      ...(cap.aplicacionId && !(cap.aplicacionIds ?? []).includes(cap.aplicacionId) ? [cap.aplicacionId] : []),
+    ];
+    return ids.map(id => appsMap[id]).filter(Boolean);
+  }
+
   const handleUrl = (url: string) => {
     if (isGoogleSlides(url)) {
       setEmbedUrl(url);
@@ -73,6 +87,8 @@ export default function Capacitaciones({ data }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {caps.map(cap => {
               const isOpen = openId === cap.id;
+              const capApps = getApps(cap as any);
+              const capObj = cap.capacidadKey ? capsMap[cap.capacidadKey] : null;
               return (
                 <div key={cap.id} style={{ background: '#fff', border: `1px solid ${isOpen ? '#0032A055' : 'var(--border)'}`, borderRadius: 14, overflow: 'hidden', transition: 'all 0.2s', boxShadow: isOpen ? '0 4px 16px rgba(0,50,160,0.08)' : 'none' }}>
                   <button
@@ -82,10 +98,20 @@ export default function Capacitaciones({ data }: Props) {
                   >
                     <span style={{ fontSize: 26, flexShrink: 0 }}>{cap.emoji || '📘'}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>
-                        {[cap.tipo, cap.duracion].filter(Boolean).join(' · ')}
-                      </div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cap.titulo}</div>
+                      {/* Chips de capacidad y apps en el header */}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 5 }}>
+                        {capObj && (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: capObj.color, background: capObj.color + '18', borderRadius: 5, padding: '2px 7px', border: `1px solid ${capObj.color}35` }}>
+                            {capObj.label}
+                          </span>
+                        )}
+                        {capApps.map(app => (
+                          <span key={app.id} style={{ fontSize: 10, fontWeight: 700, color: '#0032A0', background: '#EEF2FF', borderRadius: 5, padding: '2px 7px', border: '1px solid #C7D7FE' }}>
+                            {app.nombre}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                     <span style={{ fontSize: 12, color: '#94A3B8', flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
                   </button>
@@ -95,22 +121,62 @@ export default function Capacitaciones({ data }: Props) {
                       {cap.descripcion && (
                         <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.65, margin: '14px 0 12px' }}>{cap.descripcion}</p>
                       )}
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                        {cap.audiencia && (
-                          <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', background: '#F1F5F9', borderRadius: 6, padding: '3px 9px' }}>
-                            👥 {cap.audiencia}
-                          </span>
-                        )}
-                        {cap.url && (
-                          isGoogleSlides(cap.url) ? (
-                            <button type="button" onClick={() => handleUrl(cap.url!)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 9, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, border: '1px solid #C7D7FE', cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>
-                              🎞 Ver presentación
-                            </button>
-                          ) : (
-                            <a href={cap.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 9, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, border: '1px solid #C7D7FE', textDecoration: 'none', fontFamily: 'Manrope, sans-serif' }}>
-                              🔗 Abrir recurso
+
+                      {/* Capacidad y Aplicaciones — etiquetadas */}
+                      {(capObj || capApps.length > 0) && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '4px 0 14px', padding: '10px 14px', background: '#F8FAFF', border: '1px solid #E2E8F0', borderRadius: 10 }}>
+                          {capObj && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 90 }}>Capacidad</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: capObj.color, background: capObj.color + '18', borderRadius: 5, padding: '2px 9px', border: `1px solid ${capObj.color}35` }}>
+                                {capObj.nombre}
+                              </span>
+                            </div>
+                          )}
+                          {capApps.length > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 90, paddingTop: 2 }}>Aplicaciones</span>
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                {capApps.map(app => (
+                                  <span key={app.id} style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', background: '#EEF2FF', borderRadius: 5, padding: '2px 9px', border: '1px solid #C7D7FE' }}>
+                                    {app.nombre}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* URLs / recursos */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
+                        {cap.confluenceUrl ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <a href={cap.confluenceUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, textDecoration: 'none', fontFamily: 'Manrope, sans-serif', border: '1px solid #C7D7FE' }}>
+                              📄 Abrir en Confluence ↗
                             </a>
+                            <span style={{ fontSize: 10, color: '#94A3B8', paddingLeft: 4, wordBreak: 'break-all' }}>{cap.confluenceUrl}</span>
+                          </div>
+                        ) : null}
+                        {cap.url ? (
+                          isGoogleSlides(cap.url) ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <button type="button" onClick={() => handleUrl(cap.url!)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, border: '1px solid #C7D7FE', cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>
+                                🎞 Ver presentación
+                              </button>
+                              <span style={{ fontSize: 10, color: '#94A3B8', paddingLeft: 4, wordBreak: 'break-all' }}>{cap.url}</span>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <a href={cap.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, border: '1px solid #C7D7FE', textDecoration: 'none', fontFamily: 'Manrope, sans-serif' }}>
+                                🔗 Abrir recurso ↗
+                              </a>
+                              <span style={{ fontSize: 10, color: '#94A3B8', paddingLeft: 4, wordBreak: 'break-all' }}>{cap.url}</span>
+                            </div>
                           )
+                        ) : null}
+                        {!cap.confluenceUrl && !cap.url && (
+                          <span style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>Sin recursos configurados aún.</span>
                         )}
                       </div>
                     </div>

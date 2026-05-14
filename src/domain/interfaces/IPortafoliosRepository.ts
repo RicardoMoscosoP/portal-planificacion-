@@ -5,6 +5,6 @@ import type { Portafolio } from '../types/index';
 
 export interface IPortafoliosRepository {
   getAll(): Promise<Portafolio[]>;
-  save(portafolio: Omit<Portafolio, 'id'>): Promise<void>;
+  save(portafolio: Portafolio): Promise<void>;
   bulkSave(portafolios: Array<Omit<Portafolio, 'id'>>): Promise<void>;
 }

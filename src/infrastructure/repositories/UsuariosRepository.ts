@@ -1,5 +1,5 @@
 // UsuariosRepository.ts — Firestore acceso usuarios
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDocFromServer, setDoc } from 'firebase/firestore';
 import { db } from '../integrations/firebase/firebase';
 
 export interface Usuario {
@@ -17,7 +17,15 @@ export interface Usuario {
 export async function getUsuarioById(uid: string): Promise<Usuario | null> {
   if (!db) return null;
   const ref = doc(db, 'usuarios', uid);
-  const snap = await getDoc(ref);
+  const snap = await getDocFromServer(ref);
+  return snap.exists() ? (snap.data() as Usuario) : null;
+}
+
+// Busca usuario por email (usado cuando el admin pre-registra por email antes del primer login)
+export async function getUsuarioByEmail(email: string): Promise<Usuario | null> {
+  if (!db) return null;
+  const ref = doc(db, 'usuarios', email);
+  const snap = await getDocFromServer(ref);
   return snap.exists() ? (snap.data() as Usuario) : null;
 }
 

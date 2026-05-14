@@ -92,7 +92,7 @@ function getEntregablePct(entregable: Entregable, q: number): { left: number; wi
 interface Bar { s: number; e: number; sp: number; ep: number }
 
 function BarCols({ bar, color, label }: { bar: Bar; color: string; label: string }) {
-  const { s, e, sp, ep } = bar;
+  const { s, e, ep } = bar;
   return (
     <>
       {[0, 1, 2].map(m => {
@@ -100,9 +100,9 @@ function BarCols({ bar, color, label }: { bar: Bar; color: string; label: string
         if (m >= s && m <= e) {
           let left: string, width: string, borderRadius: string;
           if (s === e) {
-            left = sp + '%'; width = (ep - sp) + '%'; borderRadius = '6px';
+            left = '0'; width = ep + '%'; borderRadius = '6px';
           } else if (m === s) {
-            left = sp + '%'; width = (100 - sp) + '%'; borderRadius = '6px 0 0 6px';
+            left = '0'; width = '100%'; borderRadius = '6px 0 0 6px';
           } else if (m === e) {
             left = '0'; width = ep + '%'; borderRadius = '0 6px 6px 0';
           } else {

@@ -61,7 +61,7 @@ export class GASPortafoliosRepository implements IPortafoliosRepository {
     })) as Portafolio[];
   }
 
-  async save(portafolio: Omit<Portafolio, 'id'>): Promise<void> {
+  async save(portafolio: Portafolio): Promise<void> {
     await callGAS('guardarPortafolio', portafolio);
   }
 

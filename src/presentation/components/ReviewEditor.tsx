@@ -173,7 +173,7 @@ export function createEmptyReview(defaultQ = 'Q2'): Review {
     q: defaultQ,
     estado: 'borrador',
     activo: true,
-    fuente: 'interna',
+    fuente: 'embebida',
     embedUrl: '',
     jiraPanelUrl: '',
     contenido: { items: DEFAULT_REVIEW_INDEX_ITEMS.map(item => ({ ...item })) },

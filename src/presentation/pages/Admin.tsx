@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { AppData, Config, Iniciativa, EntregableItem, Bet, MOS, TeamMember, Capacidad, Alcance, Aplicacion, Stakeholder, BusinessFlow, Review, Usuario, UltimoRelease, Capacitacion } from '../../domain/types';
-import { saveConfig, saveIniciativa, deleteIniciativa, saveBet, deleteBet, saveMOS, deleteMOS, saveTeamMember, deleteTeamMember, saveCapacidades, saveAplicacion, deleteAplicacion, saveStakeholder, deleteStakeholder, saveBusinessFlow, deleteBusinessFlow, getReviews, saveReview, deleteReview, flushToSheet, getUsuarios, cambiarRolUsuario, toggleUsuarioActivo, saveCapacitacion, deleteCapacitacion } from '../../application/services/dataService';
+import { saveConfig, saveIniciativa, deleteIniciativa, saveBet, deleteBet, saveMOS, deleteMOS, saveTeamMember, deleteTeamMember, saveCapacidades, saveAplicacion, deleteAplicacion, saveStakeholder, deleteStakeholder, saveBusinessFlow, deleteBusinessFlow, getReviews, saveReview, deleteReview, flushToSheet, getUsuarios, cambiarRolUsuario, toggleUsuarioActivo, saveUsuario as saveUsuarioLocal, saveCapacitacion, deleteCapacitacion } from '../../application/services/dataService';
+import { AuthContext } from '../contexts/AuthContext';
 
 import { getBetPrimaryProduct, getBetProducts, getMosByBet, getMosQuarters } from '../../application/services/betMos';
 import { isValidExternalUrl, resolveReviewEmbed, sanitizeExternalUrl } from '../../application/services/reviewEmbed';
@@ -82,18 +83,18 @@ const STAKEHOLDER_Q_LABEL: Record<(typeof STAKEHOLDER_Q_OPTIONS)[number], string
 type BusinessFlowForm = {
   titulo: string;
   descripcionTarjeta: string;
-  contenido: string;
   confluenceUrl: string;
   presentacionUrl: string;
+  capacidadKey: string;
   activo: boolean;
 };
 
 const emptyBusinessFlowForm = (): BusinessFlowForm => ({
   titulo: '',
   descripcionTarjeta: '',
-  contenido: '',
   confluenceUrl: '',
   presentacionUrl: '',
+  capacidadKey: '',
   activo: true,
 });
 
@@ -160,12 +161,20 @@ function ConfigSection({ data, onSaved }: { data: AppData; onSaved: () => void }
 }
 
 // ── Sección Usuarios ──────────────────────────────────────────────────────────
-function UsuariosSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () => void; dialogs: AdminDialogHelpers }) {
+function UsuariosSection({ onSaved, dialogs }: { data: AppData; onSaved: () => void; dialogs: AdminDialogHelpers }) {
+  const authCtx = useContext(AuthContext);
+  const emailActual = authCtx?.user?.email ?? '';
+  const esSuperAdmin = authCtx?.user?.rol === 'superadmin';
+
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(true);
-  const emailActual = data.usuario?.email ?? '';
 
   const isGAS = typeof window !== 'undefined' && !!(window as any)?.google?.script;
+
+  const [nuevoEmail, setNuevoEmail] = useState('');
+  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [agregando, setAgregando] = useState(false);
+  const [agregarMsg, setAgregarMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Cargar usuarios: desde GAS/Firestore si está disponible, sino desde localStorage
   useEffect(() => {
@@ -193,15 +202,66 @@ function UsuariosSection({ data, onSaved, dialogs }: { data: AppData; onSaved: (
     }
   }, [isGAS]);
 
-  // Persistir cambio de rol: GAS + localStorage
-  const persistirRol = (u: Usuario, nuevoRol: 'admin' | 'super_admin' | 'viewer') => {
+  // Agregar admin por email (pre-registro antes del primer login)
+  const handleAgregarAdmin = () => {
+    const email = nuevoEmail.trim().toLowerCase();
+    const nombre = nuevoNombre.trim();
+    const domain = email.split('@')[1] ?? '';
+    if (!nombre) {
+      setAgregarMsg({ ok: false, text: '\u274c Ingresa el nombre completo' });
+      return;
+    }
+    if (!['blue.cl', 'bx.cl', 'bluex.cl'].includes(domain)) {
+      setAgregarMsg({ ok: false, text: '\u274c Solo correos @blue.cl o @bx.cl' });
+      return;
+    }
+    if (usuarios.some(u => u.email === email)) {
+      setAgregarMsg({ ok: false, text: '\u274c Ya est\u00e1 registrado' });
+      return;
+    }
+    setAgregando(true);
+    setAgregarMsg(null);
+    const nuevo: Usuario = {
+      _id: email,
+      email,
+      nombre,
+      rol: 'admin',
+      activo: true,
+      canConfigure: true,
+      fechaRegistro: new Date().toISOString(),
+      autoRegistro: false,
+    };
+    setUsuarios(prev => [...prev, nuevo]);
+    if (isGAS) {
+      const run = (window as any)?.google?.script?.run;
+      if (run) {
+        run
+          .withSuccessHandler(() => {
+            setAgregarMsg({ ok: true, text: `\u2705 ${nombre} agregado como Admin` });
+            setNuevoEmail('');
+            setNuevoNombre('');
+            setAgregando(false);
+          })
+          .withFailureHandler((err: any) => {
+            setAgregarMsg({ ok: false, text: `\u274c ${err?.message ?? 'Error al guardar'}` });
+            setAgregando(false);
+          })
+          .actualizarUsuario(email, nuevo);
+        return;
+      }
+    }
+    saveUsuarioLocal(nuevo);
+    setAgregarMsg({ ok: true, text: `\u2705 ${nombre} agregado (local)` });
+    setNuevoEmail('');
+    setNuevoNombre('');
+    setAgregando(false);
+  };
+
+  const persistirRol = (u: Usuario, nuevoRol: 'admin' | 'viewer') => {
     const canConfigure = nuevoRol !== 'viewer';
     const updated = { ...u, rol: nuevoRol, canConfigure };
-    // Actualizar lista local
     setUsuarios(prev => prev.map(x => x._id === u._id ? updated : x));
-    // Persistir en localStorage
     cambiarRolUsuario(u._id, nuevoRol);
-    // Persistir en Firestore vía GAS
     if (isGAS) {
       const run = (window as any)?.google?.script?.run;
       if (run) run.actualizarUsuario(u._id, { rol: nuevoRol, canConfigure });
@@ -220,26 +280,12 @@ function UsuariosSection({ data, onSaved, dialogs }: { data: AppData; onSaved: (
     onSaved();
   };
 
-  const ROL_COLOR: Record<string, { bg: string; color: string; border: string }> = {
-    super_admin: { bg: '#F3E8FF', color: '#6B21A8', border: '#D8B4FE' },
-    superadmin:  { bg: '#F3E8FF', color: '#6B21A8', border: '#D8B4FE' },
-    admin:       { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
-    viewer:      { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
-  };
-
-  const ROL_LABEL: Record<string, string> = {
-    super_admin: 'Super Admin',
-    superadmin:  'Super Admin',
-    admin: 'Admin',
-    viewer: 'Viewer',
-  };
-
-  const handleCambiarRol = (u: Usuario, nuevoRol: 'admin' | 'super_admin' | 'viewer') => {
+  const handleCambiarRol = (u: Usuario, nuevoRol: 'admin' | 'viewer') => {
     if (u.email === emailActual) {
       dialogs.showError('No puedes cambiar tu propio rol.', 'Acción no permitida');
       return;
     }
-    const label = ROL_LABEL[nuevoRol] ?? nuevoRol;
+    const label = nuevoRol === 'admin' ? 'Admin' : 'Viewer';
     const desc = nuevoRol === 'admin'
       ? 'Podrá administrar la configuración de su portafolio.'
       : nuevoRol === 'viewer'
@@ -265,95 +311,89 @@ function UsuariosSection({ data, onSaved, dialogs }: { data: AppData; onSaved: (
     );
   };
 
-  const total      = usuarios.length;
-  const superAdmins = usuarios.filter(u => u.rol === 'super_admin' || u.rol === 'superadmin').length;
-  const admins     = usuarios.filter(u => u.rol === 'admin').length;
-  const viewers    = usuarios.filter(u => u.rol === 'viewer' || !u.rol).length;
+  const adminsRegistrados = usuarios.filter(u => u.rol === 'admin' || u.rol === 'superadmin' || u.rol === 'super_admin');
 
   return (
     <div style={{ border: '1px solid #DCE7FF', borderRadius: 18, padding: 18, background: '#fff' }}>
-      <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px' }}>🔐 Usuarios</h3>
-      <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 6px' }}>Gestiona los roles de acceso al módulo de configuración.</p>
-      <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#475569', lineHeight: 1.8 }}>
-        <strong>Reglas de acceso:</strong><br />
-        <span style={{ color: '#6B21A8', fontWeight: 700 }}>Super Admin</span>: acceso total al admin.<br />
-        <span style={{ color: '#92400E', fontWeight: 700 }}>Admin</span>: puede configurar y administrar su portafolio.<br />
-        <span style={{ color: '#475569', fontWeight: 700 }}>Viewer</span>: solo navega el portal (portafolios, equipos, sitios). Sin acceso a configuración.<br />
-        <span style={{ color: '#DC2626', fontWeight: 600 }}>Bloqueo</span>: solo ingresan correos <strong>@blue.cl</strong> o <strong>@bx.cl</strong>.
-      </div>
+      <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px' }}>🔐 Admins registrados</h3>
+      <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 16px' }}>Solo estos usuarios tienen acceso al módulo de configuración.</p>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' as const }}>
-        {[['Total', total, '#6366F1'], ['Super Admins', superAdmins, '#6B21A8'], ['Admins', admins, '#92400E'], ['Viewers', viewers, '#475569']].map(([label, count, color]) => (
-          <span key={String(label)} style={{ background: '#F1F5F9', borderRadius: 8, padding: '4px 12px', fontSize: 13, fontWeight: 600, color: String(color) }}>
-            {label}: {count}
-          </span>
-        ))}
-      </div>
+      {/* Agregar admin por email — solo superadmin */}
+      {esSuperAdmin && (
+        <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, margin: '0 0 10px', color: '#1e293b' }}>Agregar Admin</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Nombre completo"
+              value={nuevoNombre}
+              onChange={e => { setNuevoNombre(e.target.value); setAgregarMsg(null); }}
+              style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, outline: 'none' }}
+            />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' as const }}>
+              <input
+                type="email"
+                placeholder="correo@blue.cl"
+                value={nuevoEmail}
+                onChange={e => { setNuevoEmail(e.target.value); setAgregarMsg(null); }}
+                onKeyDown={e => e.key === 'Enter' && handleAgregarAdmin()}
+                style={{ flex: 1, minWidth: 200, padding: '7px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, outline: 'none' }}
+              />
+              <button
+                onClick={handleAgregarAdmin}
+                disabled={agregando || !nuevoEmail.trim() || !nuevoNombre.trim()}
+                style={{ padding: '7px 18px', borderRadius: 8, background: '#0033A0', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: agregando || !nuevoEmail.trim() || !nuevoNombre.trim() ? 'not-allowed' : 'pointer', opacity: agregando || !nuevoEmail.trim() || !nuevoNombre.trim() ? 0.6 : 1 }}
+              >
+                {agregando ? 'Guardando…' : '+ Agregar'}
+              </button>
+            </div>
+          </div>
+          {agregarMsg && (
+            <p style={{ margin: '8px 0 0', fontSize: 13, fontWeight: 600, color: agregarMsg.ok ? '#059669' : '#dc2626' }}>
+              {agregarMsg.text}
+            </p>
+          )}
+          <p style={{ margin: '8px 0 0', fontSize: 11, color: '#94A3B8' }}>
+            El usuario podr\u00e1 entrar con su cuenta corporativa y tendr\u00e1 rol Admin desde el primer login.
+          </p>
+        </div>
+      )}
 
       {loadingUsuarios ? (
-        <div style={{ textAlign: 'center', padding: '24px', color: '#94A3B8', fontSize: 13 }}>Cargando usuarios…</div>
-      ) : usuarios.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '24px', color: '#94A3B8', fontSize: 13 }}>Cargando…</div>
+      ) : adminsRegistrados.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '24px', color: '#94A3B8', fontSize: 13 }}>
-          No hay usuarios registrados aún. Aparecen automáticamente cuando ingresan con su cuenta corporativa.
+          No hay admins registrados. Usa el formulario de arriba para agregar el primero.
         </div>
       ) : (
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-            {['Nombre', 'Email', 'Rol', 'Estado', 'Acciones'].map(h => (
+            {['Nombre', 'Email', 'Estado', 'Acciones'].map(h => (
               <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#475569' }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {usuarios.map(u => {
+          {adminsRegistrados.map(u => {
             const esSelf = u.email === emailActual;
-            const rolKey = (u.rol as string) || 'viewer';
-            const rc = ROL_COLOR[rolKey] ?? ROL_COLOR.viewer;
-            const rolLabel = ROL_LABEL[rolKey] ?? 'Viewer';
             return (
               <tr key={u._id} style={{ borderBottom: '1px solid #F1F5F9', opacity: u.activo ? 1 : 0.5 }}>
                 <td style={{ padding: '8px 12px', fontWeight: 600 }}>
                   {u.nombre || '—'}
                   {esSelf && <span style={{ marginLeft: 6, fontSize: 10, color: '#2BB8D4', fontWeight: 700 }}>Tú</span>}
-                  {u.autoRegistro && <span style={{ marginLeft: 6, fontSize: 10, color: '#94A3B8' }}>auto</span>}
                 </td>
                 <td style={{ padding: '8px 12px', color: '#64748B' }}>{u.email}</td>
-                <td style={{ padding: '8px 12px' }}>
-                  <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 700 }}>
-                    {rolLabel}
-                  </span>
-                </td>
                 <td style={{ padding: '8px 12px' }}>
                   <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: u.activo ? '#22C55E' : '#EF4444', marginRight: 6 }} />
                   {u.activo ? 'Activo' : 'Inactivo'}
                 </td>
                 <td style={{ padding: '8px 12px' }}>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
-                    {(rolKey === 'viewer' || !rolKey) && (
-                      <button onClick={() => handleCambiarRol(u, 'admin')} disabled={esSelf}
-                        style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, border: '1px solid #FCD34D', background: '#FEF3C7', color: '#92400E', cursor: esSelf ? 'not-allowed' : 'pointer', opacity: esSelf ? 0.4 : 1 }}>
-                        ↑ Hacer Admin
-                      </button>
-                    )}
-                    {rolKey === 'admin' && (
-                      <>
-                        <button onClick={() => handleCambiarRol(u, 'viewer')} disabled={esSelf}
-                          style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, border: '1px solid #CBD5E1', background: '#F1F5F9', color: '#475569', cursor: esSelf ? 'not-allowed' : 'pointer', opacity: esSelf ? 0.4 : 1 }}>
-                          ↓ Hacer Viewer
-                        </button>
-                        <button onClick={() => handleCambiarRol(u, 'super_admin')} disabled={esSelf}
-                          style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, border: '1px solid #D8B4FE', background: '#F3E8FF', color: '#6B21A8', cursor: esSelf ? 'not-allowed' : 'pointer', opacity: esSelf ? 0.4 : 1 }}>
-                          ↑ Hacer Super Admin
-                        </button>
-                      </>
-                    )}
-                    {(rolKey === 'super_admin' || rolKey === 'superadmin') && (
-                      <button onClick={() => handleCambiarRol(u, 'admin')} disabled={esSelf}
-                        style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, border: '1px solid #FCD34D', background: '#FEF3C7', color: '#92400E', cursor: esSelf ? 'not-allowed' : 'pointer', opacity: esSelf ? 0.4 : 1 }}>
-                        ↓ Hacer Admin
-                      </button>
-                    )}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => handleCambiarRol(u, 'viewer')} disabled={esSelf}
+                      style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, border: '1px solid #CBD5E1', background: '#F1F5F9', color: '#475569', cursor: esSelf ? 'not-allowed' : 'pointer', opacity: esSelf ? 0.4 : 1 }}>
+                      Quitar Admin
+                    </button>
                     <button onClick={() => handleToggleActivo(u)} disabled={esSelf}
                       style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#475569', cursor: esSelf ? 'not-allowed' : 'pointer', opacity: esSelf ? 0.4 : 1 }}>
                       {u.activo ? 'Desactivar' : 'Activar'}
@@ -1356,13 +1396,13 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
                         </div>
                         {/* Acciones */}
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <button onClick={e => { e.stopPropagation(); handleToggleActivo(bet.id); }}
-                            style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 11, fontWeight: 600, color: bet.activo === false ? '#059669' : '#475569', padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                            {bet.activo === false ? 'Activar' : 'Desactivar'}
-                          </button>
                           <button onClick={e => { e.stopPropagation(); startEditBet(bet); }}
                             style={{ background: '#f0f7ff', border: '1px solid #c7d2e8', borderRadius: 8, fontSize: 11, fontWeight: 600, color: '#0032A0', padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                             Editar
+                          </button>
+                          <button onClick={e => { e.stopPropagation(); handleToggleActivo(bet.id); }}
+                            style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 11, fontWeight: 600, color: bet.activo === false ? '#059669' : '#475569', padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            {bet.activo === false ? 'Activar' : 'Desactivar'}
                           </button>
                           <button onClick={e => { e.stopPropagation(); handleDeleteBet(bet); }}
                             style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#dc2626', fontSize: 11, fontWeight: 600, padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -1816,8 +1856,6 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
   const [capacidadForm, setCapacidadForm] = useState<CapacidadForm>(emptyCapacidadForm());
   const [editingCapacidadKey, setEditingCapacidadKey] = useState<string | null>(null);
   const [editCapacidadForm, setEditCapacidadForm] = useState<CapacidadForm>(emptyCapacidadForm());
-  const [expandedAlcanceListKey, setExpandedAlcanceListKey] = useState<string | null>(null);
-  const [alcanceInput, setAlcanceInput] = useState('');
 
   const persist = (caps: Capacidad[]) => {
     saveCapacidades(caps);
@@ -1880,23 +1918,6 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
     }, { title: 'Eliminar alcance', confirmLabel: 'Eliminar' });
   };
 
-  const handleAddAlcanceDesc = (capKey: string) => {
-    if (!alcanceInput.trim()) return;
-    const newAlcance: Alcance = { key: `alc_${Date.now()}`, capacidadKey: capKey, nombre: alcanceInput.trim(), icon: '›', color: '#64748B', descripcion: alcanceInput.trim(), alcances: [] };
-    const updated = localCaps.map(c =>
-      c.key === capKey ? { ...c, alcances: [...(c.alcances ?? []), newAlcance] } : c
-    );
-    persist(updated);
-    setAlcanceInput('');
-  };
-
-  const handleDeleteAlcanceDesc = (capKey: string, alcanceKey: string) => {
-    const updated = localCaps.map(c =>
-      c.key === capKey ? { ...c, alcances: (c.alcances ?? []).filter(a => a.key !== alcanceKey) } : c
-    );
-    persist(updated);
-  };
-
   const handleAddCapacidad = () => {
     if (!capacidadForm.label.trim() || !capacidadForm.nombre.trim()) return;
     const key = `cap_${Date.now()}`;
@@ -1911,6 +1932,15 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
       persist(localCaps.filter(c => c.key !== capKey));
       onSaved();
     }, { title: 'Eliminar capacidad', confirmLabel: 'Eliminar' });
+  };
+
+  const handleSaveCapacidad = (capKey: string) => {
+    if (!editCapacidadForm.label.trim() || !editCapacidadForm.nombre.trim()) return;
+    const updated = localCaps.map(c =>
+      c.key === capKey ? { ...c, label: editCapacidadForm.label.trim(), nombre: editCapacidadForm.nombre.trim(), color: editCapacidadForm.color } : c
+    );
+    persist(updated);
+    setEditingCapacidadKey(null);
   };
 
 
@@ -1995,24 +2025,23 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
               {/* Cabecera capacidad */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px' }}>
                 <div style={{ width: 12, height: 12, borderRadius: '50%', background: cap.color, flexShrink: 0 }} />
-                {isEditingCap ? (
-                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8 }}>
-                    <input value={editCapacidadForm.label} onChange={e => setEditCapacidadForm(p => ({ ...p, label: e.target.value }))} style={inputStyle} placeholder="Etiqueta corta" />
-                    <input value={editCapacidadForm.nombre} onChange={e => setEditCapacidadForm(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} placeholder="Nombre completo" />
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <ColorDot value={editCapacidadForm.color} onChange={c => setEditCapacidadForm(p => ({ ...p, color: c }))} />
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{cap.nombre}</div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{(cap.alcances ?? []).length} alcances</div>
-                  </div>
-                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{cap.nombre}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{(cap.alcances ?? []).length} alcances</div>
+                </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <button
-                    onClick={() => { setEditingCapacidadKey(cap.key); setEditCapacidadForm({ label: cap.label, nombre: cap.nombre, color: cap.color }); }}
-                    style={{ fontSize: 12, padding: '5px 12px', background: '#f0f7ff', border: '1px solid #c7d2e8', borderRadius: 7, cursor: 'pointer', color: '#0032A0', fontWeight: 600 }}>
+                    onClick={() => {
+                      if (isExpanded) {
+                        setExpandedCap(null);
+                        setEditingCapacidadKey(null);
+                      } else {
+                        setExpandedCap(cap.key);
+                        setEditingCapacidadKey(cap.key);
+                        setEditCapacidadForm({ label: cap.label, nombre: cap.nombre, color: cap.color });
+                      }
+                    }}
+                    style={{ fontSize: 12, padding: '5px 12px', background: '#f0f7ff', border: `1px solid ${isExpanded ? '#0032A0' : '#c7d2e8'}`, borderRadius: 7, cursor: 'pointer', color: '#0032A0', fontWeight: 600 }}>
                     Editar
                   </button>
                   <button
@@ -2020,17 +2049,28 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                     style={{ fontSize: 12, padding: '5px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 7, cursor: 'pointer', color: '#dc2626', fontWeight: 600 }}>
                     Eliminar
                   </button>
-                  <button
-                    onClick={() => { setExpandedCap(isExpanded ? null : cap.key); setAlcanceInput(''); }}
-                    style={{ fontSize: 12, color: 'var(--muted)', background: isExpanded ? `${cap.color}18` : 'none', border: `1px solid ${isExpanded ? cap.color : 'var(--border)'}`, borderRadius: 5, cursor: 'pointer', fontWeight: isExpanded ? 700 : 400 }}>
-                    {isExpanded ? '▲' : '▼'}
-                  </button>
                 </div>
               </div>
 
               {/* Alcances expandidos */}
-              {isExpanded && !isEditingCap && (
+              {isExpanded && (
                 <div style={{ borderTop: `1px solid ${cap.color}20`, background: `${cap.color}04`, padding: '12px 18px' }}>
+                  {isEditingCap && (
+                    <div style={{ background: '#fff', border: '1px solid #BFDBFE', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#0032A0', marginBottom: 12 }}>Editar capacidad</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8, marginBottom: 10 }}>
+                        <input value={editCapacidadForm.label} onChange={e => setEditCapacidadForm(p => ({ ...p, label: e.target.value }))} style={inputStyle} placeholder="Etiqueta corta" />
+                        <input value={editCapacidadForm.nombre} onChange={e => setEditCapacidadForm(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} placeholder="Nombre completo" />
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <ColorDot value={editCapacidadForm.color} onChange={c => setEditCapacidadForm(p => ({ ...p, color: c }))} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button className="btn-save" style={{ fontSize: 12, padding: '6px 14px' }} onClick={() => handleSaveCapacidad(cap.key)}>Guardar</button>
+                        <button onClick={() => setEditingCapacidadKey(null)} className="btn-admin-alt" style={{ padding: '6px 10px', fontSize: 12 }}>Cancelar</button>
+                      </div>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: cap.color, fontFamily: 'Manrope, sans-serif' }}>Alcances</span>
                     {addingAlcanceCap !== cap.key && (
@@ -2060,11 +2100,9 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {(cap.alcances ?? []).map(alc => {
                       const isEditingAlc = editingAlcanceKey === alc.key;
-                      const alcDescExpanded = expandedAlcanceListKey === alc.key && !isEditingAlc;
-                      const alcanceCount = (alc.alcances ?? []).length;
                       return (
                         <div key={alc.key}>
-                          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: alcDescExpanded ? '9px 9px 0 0' : 9, padding: '10px 14px' }}>
+                          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 9, padding: '10px 14px' }}>
                           {isEditingAlc ? (
                             <div>
                               {AlcanceFormFields({ f: editAlcanceForm, setF: setEditAlcanceForm })}
@@ -2085,11 +2123,6 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                                 {alc.contexto && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3, lineHeight: 1.4 }}>{alc.contexto.slice(0, 120)}{alc.contexto.length > 120 ? '…' : ''}</div>}
                               </div>
                               <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'center' }}>
-                                <button
-                                  onClick={() => { setExpandedAlcanceListKey(alcDescExpanded ? null : alc.key); setAlcanceInput(''); }}
-                                  style={{ fontSize: 11, padding: '3px 8px', background: alcDescExpanded ? `${cap.color}18` : 'none', border: `1px solid ${alcDescExpanded ? cap.color : 'var(--border)'}`, borderRadius: 5, cursor: 'pointer', color: alcDescExpanded ? cap.color : 'var(--muted)', fontWeight: alcDescExpanded ? 700 : 400 }}>
-                                  {alcanceCount > 0 ? `${alcanceCount} alcance${alcanceCount !== 1 ? 's' : ''}` : 'Alcances'} {alcDescExpanded ? '▲' : '▼'}
-                                </button>
                                 <button onClick={() => { setEditingAlcanceKey(alc.key); setEditAlcanceForm({ nombre: alc.nombre, icon: alc.icon, color: alc.color, descripcion: alc.descripcion, contexto: alc.contexto ?? '', badge: alc.badge ?? '' }); }}
                                   style={{ fontSize: 11, padding: '3px 8px', background: 'none', border: '1px solid var(--border)', borderRadius: 5, cursor: 'pointer', color: 'var(--text)' }}>Editar</button>
                                 <button onClick={() => handleDeleteAlcanceSub(cap.key, alc.key, alc.nombre)}
@@ -2098,35 +2131,7 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                             </div>
                           )}
                           </div>
-                          {/* Panel de sub-alcances */}
-                          {alcDescExpanded && (
-                            <div style={{ background: `${cap.color}06`, border: '1px solid var(--border)', borderTop: `1px solid ${cap.color}20`, borderRadius: '0 0 9px 9px', padding: '12px 14px' }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: cap.color, marginBottom: 10 }}>Sub-alcances</div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
-                                {(alc.alcances ?? []).length === 0 && (
-                                  <div style={{ fontSize: 12, color: 'var(--muted)', fontStyle: 'italic' }}>Sin sub-alcances. Agrega el primero.</div>
-                                )}
-                                {(alc.alcances ?? []).map(sub => (
-                                  <div key={sub.key} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: '#fff', border: '1px solid var(--border)', borderRadius: 7, padding: '7px 10px' }}>
-                                    <span style={{ color: cap.color, fontSize: 14, marginTop: 1, flexShrink: 0 }}>›</span>
-                                    <span style={{ fontSize: 12, flex: 1, color: 'var(--text)', lineHeight: 1.4 }}>{sub.nombre}</span>
-                                    <button onClick={() => handleDeleteAlcanceDesc(cap.key, sub.key)}
-                                      style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 5, cursor: 'pointer', padding: '2px 6px', flexShrink: 0, fontWeight: 600 }}>Eliminar</button>
-                                  </div>
-                                ))}
-                              </div>
-                              <div style={{ display: 'flex', gap: 6 }}>
-                                <input
-                                  value={alcanceInput}
-                                  onChange={e => setAlcanceInput(e.target.value)}
-                                  onKeyDown={e => { if (e.key === 'Enter') handleAddAlcanceDesc(cap.key); }}
-                                  placeholder="Describir sub-alcance..."
-                                  style={{ flex: 1, padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 7, fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
-                                />
-                                <button onClick={() => handleAddAlcanceDesc(cap.key)} className="f-add-btn" style={{ fontSize: 11, padding: '6px 14px' }}>+ Agregar</button>
-                              </div>
-                            </div>
-                          )}
+
                         </div>
                       );
                     })}
@@ -2624,8 +2629,8 @@ function StakeholdersSection({ data, onSaved, dialogs }: { data: AppData; onSave
       </div>
 
       <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 1.4fr 120px 140px', gap: 12, padding: '8px 16px', background: 'var(--light)', borderBottom: '1px solid var(--border)' }}>
-          {['Stakeholder', 'Q', 'Capacidades', 'Estado', ''].map((header, index) => (
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 1.4fr 1fr', gap: 12, padding: '8px 16px', background: 'var(--light)', borderBottom: '1px solid var(--border)' }}>
+          {['Stakeholder', 'Q', 'Capacidades', ''].map((header, index) => (
             <span key={index} style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)' }}>{header}</span>
           ))}
         </div>
@@ -2642,7 +2647,7 @@ function StakeholdersSection({ data, onSaved, dialogs }: { data: AppData; onSave
             .join(', ');
           return (
             <div key={stakeholder.id} style={{ borderBottom: '1px solid var(--border)', opacity: stakeholder.activo ? 1 : 0.56 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 1.4fr 120px 140px', gap: 12, padding: '12px 16px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 1.4fr 1fr', gap: 12, padding: '12px 16px', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{stakeholder.nombre}</div>
                   <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
@@ -2655,14 +2660,14 @@ function StakeholdersSection({ data, onSaved, dialogs }: { data: AppData; onSave
                 <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.45 }}>
                   {capacidadesList || 'Sin capacidades'}
                 </div>
-                <button onClick={() => handleToggleActivo(stakeholder)} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #CBD5E1', background: stakeholder.activo ? '#FFF7ED' : '#ECFDF5', color: stakeholder.activo ? '#C2410C' : '#047857', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>
-                  {stakeholder.activo ? 'Desactivar' : 'Activar'}
-                </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <button onClick={() => startEdit(stakeholder)} style={{ padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)', background: 'none', color: 'var(--text)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <button onClick={() => startEdit(stakeholder)} style={{ padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #C7D7FE', background: '#EEF2FF', color: '#1D4ED8' }}>
                     Editar
                   </button>
-                  <button onClick={() => handleDelete(stakeholder)} style={{ padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', color: 'var(--red)' }}>
+                  <button onClick={() => handleToggleActivo(stakeholder)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: stakeholder.activo ? '#FEF3C7' : '#F0FDF4', color: stakeholder.activo ? '#92400E' : '#166534', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    {stakeholder.activo ? 'Desactivar' : 'Publicar'}
+                  </button>
+                  <button onClick={() => handleDelete(stakeholder)} style={{ padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626' }}>
                     Eliminar
                   </button>
                   {savedId === stakeholder.id && <span style={{ fontSize: 12, color: '#059669' }}>✓</span>}
@@ -2708,16 +2713,14 @@ type CapacitacionForm = {
   titulo: string;
   descripcion: string;
   fecha: string;
-  tipo: string;
-  duracion: string;
   emoji: string;
-  audiencia: string;
   url: string;
+  confluenceUrl: string;
   activo: boolean;
 };
 
 function emptyCapacitacionForm(): CapacitacionForm {
-  return { titulo: '', descripcion: '', fecha: '', tipo: '', duracion: '', emoji: '📘', audiencia: '', url: '', activo: true };
+  return { titulo: '', descripcion: '', fecha: '', emoji: '📘', url: '', confluenceUrl: '', activo: true };
 }
 
 function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () => void; dialogs: AdminDialogHelpers }) {
@@ -2746,11 +2749,9 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
       titulo: cap.titulo,
       descripcion: cap.descripcion,
       fecha: cap.fecha ?? '',
-      tipo: cap.tipo ?? '',
-      duracion: cap.duracion ?? '',
       emoji: cap.emoji ?? '📘',
-      audiencia: cap.audiencia ?? '',
       url: cap.url ?? '',
+      confluenceUrl: cap.confluenceUrl ?? '',
       activo: cap.activo,
     });
     setIsEditorOpen(true);
@@ -2770,11 +2771,9 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
       titulo: form.titulo.trim(),
       descripcion: form.descripcion.trim(),
       fecha: form.fecha.trim() || undefined,
-      tipo: form.tipo.trim() || undefined,
-      duracion: form.duracion.trim() || undefined,
       emoji: form.emoji.trim() || '📘',
-      audiencia: form.audiencia.trim() || undefined,
       url: form.url.trim() || undefined,
+      confluenceUrl: form.confluenceUrl.trim() || undefined,
       activo: form.activo,
       orden: current?.orden ?? caps.length + 1,
     };
@@ -2843,22 +2842,14 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
               <div className="flbl">Emoji</div>
               <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))} style={inputStyle} placeholder="📘" />
             </div>
-            <div>
-              <div className="flbl">Tipo</div>
-              <input value={form.tipo} onChange={e => setForm(p => ({ ...p, tipo: e.target.value }))} style={inputStyle} placeholder="Ej: Video, Tutorial, Taller" />
-            </div>
-            <div>
-              <div className="flbl">Duración</div>
-              <input value={form.duracion} onChange={e => setForm(p => ({ ...p, duracion: e.target.value }))} style={inputStyle} placeholder="Ej: 12 min, 1h" />
-            </div>
-            <div>
-              <div className="flbl">Audiencia</div>
-              <input value={form.audiencia} onChange={e => setForm(p => ({ ...p, audiencia: e.target.value }))} style={inputStyle} placeholder="Ej: Operaciones, TI" />
-            </div>
             <div style={{ gridColumn: '1 / -1' }}>
-              <div className="flbl">URL Presentación / Recurso</div>
+              <div className="flbl">URL Presentación / Recurso <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(opcional)</span></div>
               <input value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} style={inputStyle} placeholder="https://docs.google.com/presentation/..." />
               <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>Google Slides se mostrará embebida; cualquier otra URL abrirá en nueva pestaña.</div>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div className="flbl">URL Confluence <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(opcional)</span></div>
+              <input value={form.confluenceUrl} onChange={e => setForm(p => ({ ...p, confluenceUrl: e.target.value }))} style={inputStyle} placeholder="https://confluence.blue.cl/display/..." />
             </div>
             <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
               <input type="checkbox" id="cap-activo" checked={form.activo} onChange={e => setForm(p => ({ ...p, activo: e.target.checked }))} />
@@ -2904,17 +2895,17 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C40', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cap.titulo}</div>
                 <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                  {[cap.fecha, cap.tipo, cap.duracion, cap.audiencia].filter(Boolean).join(' · ')}
+                  {cap.fecha ?? ''}
                 </div>
               </div>
               {cap.url && <span style={{ fontSize: 10, fontWeight: 700, color: '#059669', background: '#ECFDF5', borderRadius: 6, padding: '2px 7px', border: '1px solid #A7F3D0', flexShrink: 0 }}>URL ✓</span>}
-              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                <button type="button" onClick={() => handleMove(cap.id, 'up')} disabled={idx === 0} title="Subir" style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#F8FAFC', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.4 : 1, fontSize: 12 }}>↑</button>
-                <button type="button" onClick={() => handleMove(cap.id, 'down')} disabled={idx === filtered.length - 1} title="Bajar" style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#F8FAFC', cursor: idx === filtered.length - 1 ? 'default' : 'pointer', opacity: idx === filtered.length - 1 ? 0.4 : 1, fontSize: 12 }}>↓</button>
-                <button type="button" onClick={() => handleToggle(cap)} title={cap.activo ? 'Ocultar' : 'Publicar'} style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #E2E8F0', background: cap.activo ? '#FEF3C7' : '#F0FDF4', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: cap.activo ? '#92400E' : '#166534' }}>{cap.activo ? 'Ocultar' : 'Publicar'}</button>
-                <button type="button" onClick={() => openEdit(cap)} style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #C7D7FE', background: '#EEF2FF', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#1D4ED8' }}>Editar</button>
-                <button type="button" onClick={() => handleDelete(cap)} style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #FECACA', background: '#FEF2F2', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#DC2626' }}>Eliminar</button>
-              </div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button type="button" onClick={() => handleMove(cap.id, 'up')} disabled={idx === 0} title="Subir" style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#F8FAFC', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.4 : 1, fontSize: 12 }}>↑</button>
+                  <button type="button" onClick={() => handleMove(cap.id, 'down')} disabled={idx === filtered.length - 1} title="Bajar" style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#F8FAFC', cursor: idx === filtered.length - 1 ? 'default' : 'pointer', opacity: idx === filtered.length - 1 ? 0.4 : 1, fontSize: 12 }}>↓</button>
+                  <button type="button" onClick={() => openEdit(cap)} style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #C7D7FE', background: '#EEF2FF', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#1D4ED8' }}>Editar</button>
+                  <button type="button" onClick={() => handleToggle(cap)} title={cap.activo ? 'Desactivar' : 'Publicar'} style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #E2E8F0', background: cap.activo ? '#FEF3C7' : '#F0FDF4', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: cap.activo ? '#92400E' : '#166534' }}>{cap.activo ? 'Desactivar' : 'Publicar'}</button>
+                  <button type="button" onClick={() => handleDelete(cap)} style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #FECACA', background: '#FEF2F2', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#DC2626' }}>Eliminar</button>
+                </div>
             </div>
           ))}
         </div>
@@ -2956,9 +2947,9 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
     setForm({
       titulo: flow.titulo,
       descripcionTarjeta: flow.descripcionTarjeta,
-      contenido: flow.contenido,
       confluenceUrl: flow.confluenceUrl ?? '',
       presentacionUrl: flow.presentacionUrl ?? '',
+      capacidadKey: flow.capacidadKey ?? '',
       activo: flow.activo,
     });
     setIsEditorOpen(true);
@@ -2976,10 +2967,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
       return false;
     }
 
-    if (!form.contenido.trim() && !form.confluenceUrl.trim() && !form.presentacionUrl.trim()) {
-      dialogs.showError('Debes dejar una URL de Confluence o escribir contenido detallado para el flujo.', 'Falta información');
-      return false;
-    }
+
 
     return true;
   };
@@ -2992,9 +2980,10 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
       id: editingId ?? `bf_${Date.now()}`,
       titulo: form.titulo.trim(),
       descripcionTarjeta: form.descripcionTarjeta.trim(),
-      contenido: form.contenido.trim(),
+      contenido: '',
       confluenceUrl: form.confluenceUrl.trim() || undefined,
       presentacionUrl: form.presentacionUrl.trim() || undefined,
+      capacidadKey: form.capacidadKey.trim() || undefined,
       activo: form.activo,
       orden: current?.orden ?? flows.length + 1,
       icono: current?.icono ?? '🧭',
@@ -3043,7 +3032,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
     persistOrdered(reordered);
   };
 
-  const filteredFlows = flows.filter(flow => [flow.titulo, flow.descripcionTarjeta, flow.contenido, flow.confluenceUrl ?? '', flow.presentacionUrl ?? ''].join(' ').toLowerCase().includes(searchTerm.trim().toLowerCase()));
+  const filteredFlows = flows.filter(flow => [flow.titulo, flow.descripcionTarjeta, flow.confluenceUrl ?? '', flow.presentacionUrl ?? ''].join(' ').toLowerCase().includes(searchTerm.trim().toLowerCase()));
 
   const EditorModal = () => {
     if (!isEditorOpen) return null;
@@ -3079,8 +3068,13 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
               <input value={form.presentacionUrl} onChange={e => setForm(prev => ({ ...prev, presentacionUrl: e.target.value }))} style={inputStyle} placeholder="https://docs.google.com/presentation/..." />
             </div>
             <div>
-              <div className="flbl">Contenido detallado</div>
-              <textarea rows={9} value={form.contenido} onChange={e => setForm(prev => ({ ...prev, contenido: e.target.value }))} style={{ ...inputStyle, resize: 'vertical', minHeight: 200 }} placeholder="Contenido que se mostrará dentro de la ventana del flujo. Puedes separar párrafos dejando una línea en blanco." />
+              <div className="flbl">Capacidad relacionada <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(opcional)</span></div>
+              <select value={form.capacidadKey} onChange={e => setForm(prev => ({ ...prev, capacidadKey: e.target.value }))} style={{ ...inputStyle, background: '#fff' }}>
+                <option value="">— Sin capacidad asignada —</option>
+                {(data.capacidades ?? []).map(cap => (
+                  <option key={cap.key} value={cap.key}>{cap.nombre} ({cap.label})</option>
+                ))}
+              </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text)', cursor: 'pointer' }}>
@@ -3116,7 +3110,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
           <table style={{ width: '100%', minWidth: 1080, borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#F8FAFF' }}>
-                {['Estado', 'Título', 'Descripción tarjeta', 'Confluence', 'Contenido', 'Acciones'].map(header => (
+                {['Estado', 'Título', 'Descripción tarjeta', 'Confluence', 'Presentación', 'Acciones'].map(header => (
                   <th key={header} style={{ textAlign: 'left', padding: '12px 14px', borderBottom: '1px solid var(--border)', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748B', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}>
                     {header}
                   </th>
@@ -3150,16 +3144,16 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #EEF2F7', fontSize: 12, color: '#334155', minWidth: 180 }}>
                       {flow.confluenceUrl ? <a href={flow.confluenceUrl} target="_blank" rel="noreferrer">Abrir enlace</a> : 'Sin URL'}
                     </td>
-                    <td style={{ padding: '12px 14px', borderBottom: '1px solid #EEF2F7', fontSize: 12, color: '#334155', minWidth: 280, lineHeight: 1.5 }}>{flow.contenido ? `${flow.contenido.slice(0, 110)}${flow.contenido.length > 110 ? '…' : ''}` : 'Sin contenido propio'}</td>
+                    <td style={{ padding: '12px 14px', borderBottom: '1px solid #EEF2F7', fontSize: 12, color: '#334155', minWidth: 180 }}>
+                      {flow.presentacionUrl ? <a href={flow.presentacionUrl} target="_blank" rel="noreferrer">Abrir enlace</a> : 'Sin URL'}
+                    </td>
                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #EEF2F7', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => handleMove(flow.id, 'up')} disabled={!canMoveUp} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #CBD5E1', background: canMoveUp ? '#fff' : '#F8FAFC', color: canMoveUp ? '#334155' : '#94A3B8', fontSize: 12, fontWeight: 700, cursor: canMoveUp ? 'pointer' : 'not-allowed', fontFamily: 'Manrope, sans-serif' }}>↑</button>
-                        <button onClick={() => handleMove(flow.id, 'down')} disabled={!canMoveDown} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #CBD5E1', background: canMoveDown ? '#fff' : '#F8FAFC', color: canMoveDown ? '#334155' : '#94A3B8', fontSize: 12, fontWeight: 700, cursor: canMoveDown ? 'pointer' : 'not-allowed', fontFamily: 'Manrope, sans-serif' }}>↓</button>
-                        <button onClick={() => openEdit(flow)} className="btn-admin-alt" style={{ padding: '7px 10px', fontSize: 12 }}>
-                          Editar
-                        </button>
-                        <button onClick={() => handleToggleActivo(flow)} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid #CBD5E1', background: flow.activo !== false ? '#FFF7ED' : '#ECFDF5', color: flow.activo !== false ? '#C2410C' : '#047857', fontSize: 12, fontWeight: 700, cursor: flow.activo !== false ? 'pointer' : 'not-allowed', fontFamily: 'Manrope, sans-serif' }}>{flow.activo !== false ? 'Desactivar' : 'Activar'}</button>
-                        <button onClick={() => handleDelete(flow)} style={{ padding: '7px 10px', borderRadius: 8, border: 'none', background: '#FEF2F2', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: flow.activo !== false ? 'pointer' : 'not-allowed', fontFamily: 'Manrope, sans-serif' }}>Eliminar</button>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button type="button" onClick={() => handleMove(flow.id, 'up')} disabled={!canMoveUp} title="Subir" style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#F8FAFC', cursor: canMoveUp ? 'pointer' : 'default', opacity: canMoveUp ? 1 : 0.4, fontSize: 12 }}>↑</button>
+                        <button type="button" onClick={() => handleMove(flow.id, 'down')} disabled={!canMoveDown} title="Bajar" style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#F8FAFC', cursor: canMoveDown ? 'pointer' : 'default', opacity: canMoveDown ? 1 : 0.4, fontSize: 12 }}>↓</button>
+                        <button type="button" onClick={() => openEdit(flow)} style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #C7D7FE', background: '#EEF2FF', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#1D4ED8' }}>Editar</button>
+                        <button type="button" onClick={() => handleToggleActivo(flow)} title={flow.activo ? 'Desactivar' : 'Publicar'} style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #E2E8F0', background: flow.activo ? '#FEF3C7' : '#F0FDF4', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: flow.activo ? '#92400E' : '#166534' }}>{flow.activo ? 'Desactivar' : 'Publicar'}</button>
+                        <button type="button" onClick={() => handleDelete(flow)} style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #FECACA', background: '#FEF2F2', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#DC2626' }}>Eliminar</button>
                       </div>
                     </td>
                   </tr>

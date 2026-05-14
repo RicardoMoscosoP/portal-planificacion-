@@ -36,10 +36,8 @@ function RoadmapBar({ ini, q }: { ini: Iniciativa; q: number }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, marginTop: 6 }}>
       {months.map((m, idx) => {
         const active = idx >= bar.s && idx <= bar.e;
-        let left = 0;
-        let right = 0;
-        if (idx === bar.s) left = bar.sp;
-        if (idx === bar.e) right = 100 - bar.ep;
+        const left = 0;
+        const right = idx === bar.e ? 100 - bar.ep : 0;
         const clr = ini.tag === 'done' ? '#059669' : ini.tag === 'wip' ? '#0369A1' : '#0032A0';
 
         return (

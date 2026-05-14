@@ -30,6 +30,31 @@ function gasAdminRun(method: 'adminCrear' | 'adminActualizar' | 'adminEliminar',
   }, 0);
 }
 
+const SEED_PRESENTACIONES: Presentacion[] = [
+  {
+    id: 'pres_demo_01',
+    titulo: 'Portafolio Distribución - Planificación del Transporte',
+    descripcion: 'Presentación general del portafolio: misión, visión, capacidades y roadmap Q2.',
+    capacidad: 'plan',
+    url: 'https://docs.google.com/presentation/d/1jLOsNwLUZSTflpAMhkgENB0jTfkV1La6/edit?slide=id.p23#slide=id.p23',
+    fechaCreacion: '2026-04-01T00:00:00.000Z',
+  },
+  {
+    id: 'pres_demo_02',
+    titulo: 'Portafolio Distribución - Optimizador de Rutas',
+    descripcion: 'Demo del MVP del Optimizador de Rutas para última milla — Base Valdivia.',
+    capacidad: 'plan',
+    url: 'https://docs.google.com/presentation/d/1jLOsNwLUZSTflpAMhkgENB0jTfkV1La6/edit?slide=id.p23#slide=id.p23',
+    fechaCreacion: '2026-04-15T00:00:00.000Z',
+  },
+];
+
+export function seedPresentacionesIfEmpty(): void {
+  if (readLS().length === 0) {
+    writeLS(SEED_PRESENTACIONES);
+  }
+}
+
 export const getPresentaciones = (): Presentacion[] => readLS();
 
 export const savePresentaciones = (presentaciones: Presentacion[]): void => writeLS(presentaciones);

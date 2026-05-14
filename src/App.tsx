@@ -52,6 +52,10 @@ function App() {
   }, []);
 
   const navToCapacidad = (capacidadKey: string) => {
+    // Scroll to top before navigating
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
     setActiveCapacidadKey(capacidadKey);
     setActivePage('capacidad');
   };
@@ -248,14 +252,6 @@ function App() {
 
     return (
       <>
-        {isAdmin && (
-          <button
-            onClick={() => setNavLevel('adminpanel')}
-            style={{ position: 'fixed', bottom: 24, right: 24, background: '#0033A0', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 700, fontSize: 12, cursor: 'pointer', zIndex: 100, opacity: 0.85 }}
-          >
-            ⚙ Admin
-          </button>
-        )}
         <Portafolios
           portafolios={portfoliosData}
           onSelectEquipo={(equipo) => {
@@ -349,7 +345,7 @@ function App() {
           ? <CapacidadRoadmap capacidad={cap} data={data} q={activeQuarter} onBack={() => setActivePage('inicio')} />
           : null;
       }
-      case 'presentaciones':  return <PresentacionesPage />;
+      case 'presentaciones':  return <PresentacionesPage data={data} />;
       default:
         return (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 256, fontSize: 14, color: '#6B7A9F' }}>

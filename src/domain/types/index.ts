@@ -80,9 +80,12 @@ export interface Capacitacion {
   tipo?: string;
   duracion?: string;
   emoji?: string;
-  aplicacionId?: string;
+  aplicacionId?: string;        // legacy — campo único (se mantiene por compatibilidad)
+  aplicacionIds?: string[];     // múltiples aplicaciones asociadas
+  capacidadKey?: string;        // capacidad asociada
   audiencia?: string;
   url?: string;
+  confluenceUrl?: string;
   fecha?: string;
   activo: boolean;
   orden: number;
@@ -291,6 +294,7 @@ export interface BusinessFlow {
   contenido: string;
   confluenceUrl?: string;
   presentacionUrl?: string;
+  capacidadKey?: string;
   icono?: string;
   color?: string;
   activo: boolean;
@@ -352,6 +356,7 @@ export interface Equipo {
   descripcion?: string;
   portafolioId: string;
   activo?: boolean;
+  creadoEn?: string; // ISO timestamp
 }
 
 // ── Portafolio ───────────────────────────────────────────────────────────────
@@ -361,6 +366,7 @@ export interface Portafolio {
   descripcion?: string;
   equipos: Equipo[];
   activo?: boolean;
+  creadoEn?: string; // ISO timestamp
 }
 
 // ── Estructura raíz para multi-portafolio ─────────────────────────────────────

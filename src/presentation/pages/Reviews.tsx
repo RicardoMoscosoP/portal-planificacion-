@@ -1,8 +1,9 @@
 ﻿import { useState } from 'react';
 import type { AppData, Review } from '../../domain/types';
 import { getReviews } from '../../application/services/dataService';
-import { getReviewDisplayName, getReviewSourceLabel } from '../../application/services/reviewUtils';
+import { getReviewDisplayName } from '../../application/services/reviewUtils';
 import ReviewPresentation from '../components/ReviewPresentation';
+import ReviewEmbedModal from '../components/ReviewEmbedModal';
 import '../styles/reviews.css';
 
 function loadReviews(): Review[] {
@@ -11,15 +12,17 @@ function loadReviews(): Review[] {
 
 export default function Reviews({ data }: { data: AppData }) {
   const [reviews] = useState<Review[]>(() => loadReviews().slice().reverse());
+  const [embedReview, setEmbedReview] = useState<Review | null>(null);
   const [presentationReview, setPresentationReview] = useState<Review | null>(null);
-  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const PAGE_SIZE = 5;
   const totalPages = Math.max(1, Math.ceil(reviews.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pagedReviews = reviews.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const selectedReview = reviews.find(review => review.id === selectedReviewId) ?? null;
+
+  // Solo reviews con embedUrl para la navegación del modal
+  const embedReviews = reviews.filter(r => r.embedUrl);
 
   return (
     <div className="page-shell reviews-page reviews-contenedor">
@@ -48,117 +51,69 @@ export default function Reviews({ data }: { data: AppData }) {
           </div>
         ) : (
           <div className="reviews-table-container">
-            <div className="reviews-header-bar">
-              <span className="reviews-header-info">
-                {selectedReview ? `✓ Seleccionada: ${getReviewDisplayName(selectedReview)}` : '👉 Selecciona una review para ejecutar'}
-              </span>
-              <div className="reviews-header-actions">
-                <button
-                  type="button"
-                  className="btn-execute-review"
-                  onClick={() => selectedReview && setPresentationReview(selectedReview)}
-                  disabled={!selectedReview}
-                >
-                  ▶ Presentar
-                </button>
-                {selectedReview?.embedUrl && (
-                  <a
-                    href={selectedReview.embedUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-execute-review"
-                    style={{ textDecoration: 'none', opacity: 1 }}
-                  >
-                    ↗ Abrir en pestaña
-                  </a>
-                )}
-              </div>
-            </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table className="reviews-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 50 }}>Sel.</th>
-                    <th>Título</th>
-                    <th>Q</th>
-                    <th>Sprint</th>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                    <th>Panel</th>
-                    <th>URL</th>
+            <table className="reviews-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '40%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '28%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>Título</th>
+                  <th style={{ textAlign: 'left' }}>Q</th>
+                  <th style={{ textAlign: 'left' }}>Sprint</th>
+                  <th style={{ textAlign: 'left' }}>Fecha</th>
+                  <th style={{ textAlign: 'left' }}>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedReviews.map(review => (
+                  <tr key={review.id}>
+                    <td style={{ verticalAlign: 'middle', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span className="review-title">{getReviewDisplayName(review)}</span>
+                    </td>
+                    <td style={{ fontSize: 13, verticalAlign: 'middle', textAlign: 'left' }}>{review.q || '—'}</td>
+                    <td style={{ fontSize: 13, verticalAlign: 'middle', textAlign: 'left' }}>{review.sprint || '—'}</td>
+                    <td style={{ fontSize: 13, whiteSpace: 'nowrap', verticalAlign: 'middle', textAlign: 'left' }}>{review.fecha || '—'}</td>
+                    <td style={{ verticalAlign: 'middle', textAlign: 'left' }}>
+                      <button
+                        type="button"
+                        onClick={() => review.embedUrl ? setEmbedReview(review) : setPresentationReview(review)}
+                        style={{ fontSize: 13, color: '#0032A0', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}
+                        onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                        onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                      >
+                        ▶ Presentar
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {pagedReviews.map(review => {
-                    const selected = selectedReviewId === review.id;
-                    return (
-                    <tr
-                      key={review.id}
-                      className={selected ? 'selected' : ''}
-                      onClick={() => setSelectedReviewId(review.id)}
-                    >
-                      <td style={{ textAlign: 'center' }}>
-                        <input
-                          type="radio"
-                          name="selected-public-review"
-                          checked={selected}
-                          onChange={() => setSelectedReviewId(review.id)}
-                          onClick={event => event.stopPropagation()}
-                        />
-                      </td>
-                      <td><span className="review-title">{getReviewDisplayName(review)}</span></td>
-                      <td>{review.q}</td>
-                      <td>{review.sprint || '—'}</td>
-                      <td>{review.fecha || 'Sin fecha'}</td>
-                      <td>
-                        <span className={`review-type-badge ${review.fuente === 'embebida' || review.embedUrl ? 'external' : 'internal'}`}>
-                          {getReviewSourceLabel(review)}
-                        </span>
-                      </td>
-                      <td>
-                        {review.jiraPanelUrl ? (
-                          <a href={review.jiraPanelUrl} target="_blank" rel="noreferrer" className="review-panel-link">🔗 Abrir</a>
-                        ) : '—'}
-                      </td>
-                      <td onClick={event => event.stopPropagation()}>
-                        {review.embedUrl ? (
-                          <a href={review.embedUrl} target="_blank" rel="noreferrer" className="review-panel-link">↗ Abrir</a>
-                        ) : '—'}
-                      </td>
-                    </tr>
-                  );})}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
             <div className="reviews-table-footer">
               <span>Página {safePage} de {totalPages}</span>
               <div className="reviews-pagination">
-                <button
-                  type="button"
-                  className="btn-pagination"
-                  onClick={() => setPage(value => Math.max(1, value - 1))}
-                  disabled={safePage === 1}
-                >
-                  ← Anterior
-                </button>
-                <button
-                  type="button"
-                  className="btn-pagination"
-                  onClick={() => setPage(value => Math.min(totalPages, value + 1))}
-                  disabled={safePage === totalPages}
-                >
-                  Siguiente →
-                </button>
+                <button type="button" className="btn-pagination" onClick={() => setPage(v => Math.max(1, v - 1))} disabled={safePage === 1}>← Anterior</button>
+                <button type="button" className="btn-pagination" onClick={() => setPage(v => Math.min(totalPages, v + 1))} disabled={safePage === totalPages}>Siguiente →</button>
               </div>
             </div>
           </div>
         )}
       </div>
 
+      {embedReview && (
+        <ReviewEmbedModal
+          review={embedReview}
+          all={embedReviews}
+          config={data.config}
+          onClose={() => setEmbedReview(null)}
+        />
+      )}
       {presentationReview && (
         <ReviewPresentation review={presentationReview} data={data} onClose={() => setPresentationReview(null)} />
       )}
     </div>
   );
 }
-

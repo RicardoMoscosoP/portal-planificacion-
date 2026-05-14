@@ -60,7 +60,7 @@ export default function AdminPanel({ onVolver, userEmail }: { onVolver?: () => v
       // Pasamos el portafolio completo con su id generado por el form,
       // para que portafolioId en cada equipo sea consistente con el doc en Firestore.
       // GAS usa objeto.id si está presente, o genera uno si no.
-      await repo.save(portafolio as unknown as Omit<Portafolio, 'id'>);
+      await repo.save(portafolio);
       setFormMsg({ ok: true, text: `✅ Portafolio "${portafolio.nombre}" guardado en Firestore.` });
       setMostrarForm(false);
     } catch (e) {

@@ -1,20 +1,15 @@
-// useAuth.ts — hook de autenticación y rol
-// Si Firebase no está configurado (sin VITE_FIREBASE_API_KEY), auto-login
-// como superadmin para que el HTML funcione desplegado en GAS sin credenciales.
 import { useEffect, useState, useCallback } from 'react';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { auth as firebaseAuth } from '../../infrastructure/integrations/firebase/firebase';
-import { getUsuarioById, saveUsuario } from '../../infrastructure/repositories/UsuariosRepository';
+import { getUsuarioById, getUsuarioByEmail } from '../../infrastructure/repositories/UsuariosRepository';
 import type { Usuario } from '../../infrastructure/repositories/UsuariosRepository';
 
-// Dominios corporativos permitidos
 const CORPORATE_DOMAINS = ['blue.cl', 'bx.cl', 'bluex.cl'];
 function isCorporateEmail(email: string): boolean {
   const domain = email.split('@')[1]?.toLowerCase() ?? '';
   return CORPORATE_DOMAINS.includes(domain);
 }
 
-// Usuario dev (sin Firebase): auto-login como admin local
 const GUEST_USER: Usuario = {
   _id: 'dev_local',
   email: 'ricardo.moscoso@blue.cl',
@@ -27,15 +22,13 @@ const GUEST_USER: Usuario = {
   autoRegistro: false,
 };
 
-
-const SUPERADMIN_EMAILS = [
+const PRIVILEGED_EMAILS = [
   'ricardo.moscoso@blue.cl',
   'ricardo.moscoso@bx.cl',
 ];
 
-
 function resolveRol(email: string, storedRol: string): Usuario['rol'] {
-  if (SUPERADMIN_EMAILS.includes(email.toLowerCase())) return 'superadmin';
+  if (PRIVILEGED_EMAILS.includes(email.toLowerCase())) return 'superadmin';
   return storedRol as Usuario['rol'];
 }
 
@@ -72,19 +65,21 @@ export function useAuth() {
       }
 
       let usuario = await getUsuarioById(uid);
+      // Si no tiene doc por UID, buscar por email (admin pre-registrado por superadmin)
+      if (!usuario) usuario = await getUsuarioByEmail(email || '');
       if (!usuario) {
+        // No está registrado: acceso como viewer transitorio, sin guardar en Firestore
         usuario = {
           _id: uid,
           email: email || '',
-          nombre: displayName || '',
-          rol: resolveRol(email || '', 'viewer'),
+          nombre: displayName || email || '',
+          rol: 'viewer',
           activo: true,
-          canConfigure: SUPERADMIN_EMAILS.includes((email || '').toLowerCase()),
+          canConfigure: false,
           portafoliosAdmin: [],
-          fechaRegistro: new Date().toISOString(),
-          autoRegistro: true,
+          fechaRegistro: '',
+          autoRegistro: false,
         };
-        await saveUsuario(usuario);
       }
       // Forzar superadmin si corresponde
       usuario.rol      = resolveRol(usuario.email, usuario.rol);

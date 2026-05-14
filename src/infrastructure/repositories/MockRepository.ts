@@ -113,6 +113,7 @@ export const MOCK_DATA: AppData = {
       descripcionTarjeta: 'Define cómo se estructura territorialmente la operación para asignar cobertura, hubs, bases y zonas de servicio.',
       contenido: 'El modelo geográfico organiza la operación logística sobre una capa territorial común. Define regiones, comunas, hubs, bases, postas y zonas de cobertura para que la planificación, el ruteo y la operación hablen el mismo idioma.\n\nEste flujo de negocio habilita decisiones como la asignación de hub, la cobertura territorial de una base, la detección de vacíos operativos y la trazabilidad de cambios sobre el mapa logístico.\n\nTambién sirve como base para productos como Red de Distribución, Direcciones y optimización de rutas, porque todos dependen de una representación geográfica consistente.',
       confluenceUrl: '',
+      capacidadKey: 'red',
       icono: '🗺️',
       color: '#0891B2',
       activo: true,
@@ -124,6 +125,7 @@ export const MOCK_DATA: AppData = {
       descripcionTarjeta: 'Explica cómo se mueve la operación entre primera, media, troncal y última milla, junto con sus reglas y restricciones.',
       contenido: 'El modelo operativo describe el flujo real de una orden dentro de Blue Express, desde el retiro o ingreso hasta su entrega final. Define etapas, responsables, restricciones, dependencias y eventos clave para que los equipos entiendan cómo se ejecuta el negocio.\n\nEste flujo de negocio permite alinear productos de planificación con la operación real, evitando diseñar soluciones desconectadas del terreno. También ayuda a identificar puntos de control, cuellos de botella y oportunidades de automatización.\n\nSu documentación debe servir tanto para entender el proceso completo como para explicar dónde impacta cada producto del equipo dentro del ciclo operativo.',
       confluenceUrl: '',
+      capacidadKey: 'plan',
       icono: '⚙️',
       color: '#1B30CC',
       activo: true,
@@ -141,12 +143,8 @@ export const MOCK_DATA: AppData = {
   ],
   salud: [],
   capacitaciones: [
-    { id: 'cap_001', equipoId: 'eq_planificacion', titulo: 'Introducción a Blue Planner',                           descripcion: 'Visión general del dashboard de planificación.',                                                  tipo: 'Video',     duracion: '12 min', emoji: '📅', aplicacionId: 'app_blue_planner',    audiencia: 'Operaciones',               url: 'https://drive.google.com/file/d/blueplanner-intro/view',    activo: true, orden: 1 },
-    { id: 'cap_002', equipoId: 'eq_planificacion', titulo: 'Smart Retiros: cómo funciona la asignación automática', descripcion: 'Explica el algoritmo de asignación de reservas.',                                                tipo: 'Tutorial',  duracion: '15 min', emoji: '📦', aplicacionId: 'app_smart_retiros',   audiencia: 'Operaciones / TI',          url: 'https://drive.google.com/file/d/smartretiros-tutorial/view', activo: true, orden: 2 },
-    { id: 'cap_003', equipoId: 'eq_planificacion', titulo: 'Cómo usar Geosolver para validar una dirección',       descripcion: 'Guía paso a paso para validar y corregir direcciones.',                                          tipo: 'Tutorial',  duracion: '8 min',  emoji: '🔍', aplicacionId: 'app_geosolver',       audiencia: 'Atención al Cliente / Ops', url: 'https://drive.google.com/file/d/geosolver-tutorial/view',   activo: true, orden: 3 },
-    { id: 'cap_004', equipoId: 'eq_planificacion', titulo: 'Diccionario Blue: estructura y niveles de calidad',    descripcion: 'Explica el Diccionario Blue y qué significa cada nivel de calidad.',                             tipo: 'Referencia',duracion: '10 min', emoji: '📍', aplicacionId: 'app_diccionario_blue', audiencia: 'TI / Data',                url: 'https://confluence.blue.cl/display/TEC/diccionario-blue',   activo: true, orden: 4 },
-    { id: 'cap_005', equipoId: 'eq_planificacion', titulo: 'Seguimiento y monitoreo de rutas en el Optimizador',  descripcion: 'Cómo interpretar el dashboard de eficiencia de rutas.',                                         tipo: 'Guía',      duracion: '5 min',  emoji: '🚛', aplicacionId: 'app_optimizador',     audiencia: 'Jefes de Base / Operaciones', url: 'https://drive.google.com/file/d/optimizador-guia/view',    activo: true, orden: 5 },
-    { id: 'cap_006', equipoId: 'eq_planificacion', titulo: 'Modelo operativo de Red de Distribución',             descripcion: 'Qué son Postas, Bases y Hubs y cómo se asigna la cobertura territorial.',                        tipo: 'Documento', duracion: '15 min', emoji: '🗺️', aplicacionId: 'app_red_dist',        audiencia: 'Equipo de Tecnología',      url: 'https://confluence.blue.cl/display/TEC/red-distribucion',   activo: true, orden: 6 },
+    { id: 'cap_001', equipoId: 'eq_planificacion', titulo: 'Smart Retiros: cómo funciona la asignación automática', descripcion: 'Explica el algoritmo de asignación automática de reservas por capacidad, zona y disponibilidad operativa de couriers.', emoji: '📦', capacidadKey: 'plan', aplicacionIds: ['app_smart_retiros', 'app_blue_planner'], url: '', activo: true, orden: 1 },
+    { id: 'cap_002', equipoId: 'eq_planificacion', titulo: 'Cómo usar Geosolver para validar una dirección',       descripcion: 'Guía paso a paso para validar, corregir y georreferenciar direcciones usando el Diccionario Blue.',                            emoji: '🔍', capacidadKey: 'int',  aplicacionIds: ['app_geosolver', 'app_diccionario_blue'],          url: '', activo: true, orden: 2 },
   ],
   reviews: [],
   usuario: {
@@ -174,30 +172,6 @@ export const MOCK_USUARIOS = [
 
 export const MOCK_REVIEWS = [
   {
-    id: 'rev_q2_01',
-    titulo: 'Review Sprint 63',
-    sprint: '63',
-    fecha: '2026-04-01',
-    q: 'Q2',
-    estado: 'publicada',
-    activo: true,
-    fuente: 'embebida',
-    embedUrl: 'https://docs.google.com/presentation/d/1RWMBwMxEKEctaT6YFhVmVTPFtkxTiNI3/edit?slide=id.g3b989720807_0_37#slide=id.g3b989720807_0_37',
-    contenido: { items: [] },
-    indicadores: [
-      { titulo: 'Velocidad del equipo', contexto: '48 SP completados — referencia base: 45 SP/sprint', url: 'https://placehold.co/1280x720/png/0A1650/2BB8D4?text=Velocidad+Sprint+63%0A48+SP+vs+45+SP' },
-      { titulo: 'Cobertura Q2', contexto: '4 iniciativas activas · 0 bloqueadas · 0 completadas', url: '' },
-    ],
-    resultados: [
-      { titulo: 'Smart Retiros — API disponible en QA', contexto: 'Endpoint /reservas con validación de capacidad y zona operativo en ambiente QA.', url: '' },
-      { titulo: 'Diccionario Blue — datos históricos cargados', contexto: '180K direcciones normalizadas con clasificación inicial de calidad.', url: '' },
-    ],
-    demo: ['Demo Smart Retiros — API de reservas', 'Demo carga masiva Diccionario Blue'],
-    riesgos: [
-      { titulo: 'Calidad de datos legacy', contexto: 'Direcciones históricas sin normalización dificultan la georreferenciación automática.', url: '', nivel: 'alto' },
-    ],
-  },
-  {
     id: 'rev_q2_02',
     titulo: 'Review Sprint 64',
     sprint: '64',
@@ -205,6 +179,7 @@ export const MOCK_REVIEWS = [
     q: 'Q2',
     estado: 'publicada',
     activo: true,
+    embedUrl: 'https://docs.google.com/presentation/d/1RWMBwMxEKEctaT6YFhVmVTPFtkxTiNI3/edit?slide=id.g3b989720807_0_37#slide=id.g3b989720807_0_37',
     contenido: { items: [] },
     indicadores: [
       { titulo: 'Velocidad del equipo', contexto: '52 SP completados — mejor sprint del Q hasta la fecha', url: 'https://placehold.co/1280x720/png/0A1650/86EFAC?text=Velocidad+Sprint+64%0A52+SP+completados' },

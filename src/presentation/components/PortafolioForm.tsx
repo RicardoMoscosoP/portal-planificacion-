@@ -10,37 +10,43 @@ interface Props {
 export default function PortafolioForm({ portafolio, onSave, onCancel }: Props) {
   const [nombre, setNombre] = useState(portafolio?.nombre ?? '');
   const [descripcion, setDescripcion] = useState(portafolio?.descripcion ?? '');
-  const [equipos, setEquipos] = useState(
-    portafolio?.equipos?.map(e => ({ nombre: e.nombre, descripcion: e.descripcion })) ?? [
-      { nombre: '', descripcion: '' },
+  const [formError, setFormError] = useState<string | null>(null);
+
+  type EquipoForm = { id?: string; nombre: string; descripcion: string; activo: boolean; isNew: boolean };
+  const [equipos, setEquipos] = useState<EquipoForm[]>(
+    portafolio?.equipos?.map(e => ({ id: e.id, nombre: e.nombre, descripcion: e.descripcion ?? '', activo: e.activo !== false, isNew: false })) ?? [
+      { nombre: '', descripcion: '', activo: true, isNew: true },
     ]
   );
 
   const isEditing = !!portafolio;
 
   const handleAgregarEquipo = () => {
-    setEquipos([...equipos, { nombre: '', descripcion: '' }]);
+    setEquipos([...equipos, { nombre: '', descripcion: '', activo: true, isNew: true }]);
   };
 
-  const handleEliminarEquipo = (index: number) => {
+  const handleQuitarEquipo = (index: number) => {
     setEquipos(equipos.filter((_, i) => i !== index));
   };
 
+  const handleToggleEquipoActivo = (index: number) => {
+    setEquipos(equipos.map((e, i) => i === index ? { ...e, activo: !e.activo } : e));
+  };
+
   const handleEquipoChange = (index: number, field: 'nombre' | 'descripcion', value: string) => {
-    const nuevosEquipos = [...equipos];
-    nuevosEquipos[index][field] = value;
-    setEquipos(nuevosEquipos);
+    setEquipos(equipos.map((e, i) => i === index ? { ...e, [field]: value } : e));
   };
 
   const handleSave = () => {
+    setFormError(null);
     if (!nombre.trim()) {
-      alert('El nombre del portafolio es requerido');
+      setFormError('El nombre del portafolio es requerido');
       return;
     }
 
     const equiposFiltrados = equipos.filter(e => e.nombre.trim());
     if (equiposFiltrados.length === 0) {
-      alert('Debe agregar al menos un equipo');
+      setFormError('Debe agregar al menos un equipo');
       return;
     }
 
@@ -49,15 +55,13 @@ export default function PortafolioForm({ portafolio, onSave, onCancel }: Props) 
         ...portafolio,
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
-        equipos: equiposFiltrados.map((e, idx) => {
-          const equipoExistente = portafolio.equipos[idx];
-          return {
-            id: equipoExistente?.id ?? `eq_${portafolio.id}_${idx}`,
-            nombre: e.nombre.trim(),
-            descripcion: (e.descripcion ?? '').trim(),
-            portafolioId: portafolio.id,
-          };
-        }),
+        equipos: equiposFiltrados.map((e) => ({
+          id: e.id ?? `eq_${portafolio.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          nombre: e.nombre.trim(),
+          descripcion: (e.descripcion ?? '').trim(),
+          portafolioId: portafolio.id,
+          activo: e.activo,
+        })),
       };
       onSave(portafolioActualizado);
     } else {
@@ -67,12 +71,14 @@ export default function PortafolioForm({ portafolio, onSave, onCancel }: Props) 
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
         activo: true,
+        creadoEn: new Date().toISOString(),
         equipos: equiposFiltrados.map((e, idx) => ({
           id: `eq_${portafolioId}_${idx}`,
           nombre: e.nombre.trim(),
           descripcion: (e.descripcion ?? '').trim(),
           portafolioId,
           activo: true,
+          creadoEn: new Date().toISOString(),
         })),
       };
       onSave(nuevoPortafolio);
@@ -87,6 +93,11 @@ export default function PortafolioForm({ portafolio, onSave, onCancel }: Props) 
       </div>
 
       <div style={{ padding: 20, display: 'grid', gap: 14 }}>
+        {formError && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#dc2626', fontWeight: 600 }}>
+            {formError}
+          </div>
+        )}
         <div>
           <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', display: 'block', marginBottom: 6 }}>Nombre</label>
           <input
@@ -113,7 +124,7 @@ export default function PortafolioForm({ portafolio, onSave, onCancel }: Props) 
           <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#2563eb', display: 'block', marginBottom: 8 }}>Equipos del Portafolio</label>
           <div style={{ display: 'grid', gap: 8 }}>
             {equipos.map((equipo, idx) => (
-              <div key={idx} style={{ border: '1px solid #dbeafe', background: '#eff6ff', borderRadius: 10, padding: 10 }}>
+              <div key={idx} style={{ border: `1px solid ${equipo.activo ? '#dbeafe' : '#e5e7eb'}`, background: equipo.activo ? '#eff6ff' : '#f8fafc', borderRadius: 10, padding: 10, opacity: equipo.activo ? 1 : 0.6 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8, alignItems: 'center' }}>
                   <input
                     type="text"
@@ -129,11 +140,15 @@ export default function PortafolioForm({ portafolio, onSave, onCancel }: Props) 
                     placeholder="Contexto equipo"
                     style={{ width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 12, boxSizing: 'border-box' }}
                   />
-                  {equipos.length > 1 ? (
-                    <button onClick={() => handleEliminarEquipo(idx)} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                  {equipo.isNew ? (
+                    <button onClick={() => handleQuitarEquipo(idx)} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
                       Quitar
                     </button>
-                  ) : <span style={{ width: 48 }} />}
+                  ) : (
+                    <button onClick={() => handleToggleEquipoActivo(idx)} style={{ border: 'none', background: 'transparent', color: equipo.activo ? '#f59e0b' : '#059669', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>
+                      {equipo.activo ? 'Desact.' : 'Activar'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

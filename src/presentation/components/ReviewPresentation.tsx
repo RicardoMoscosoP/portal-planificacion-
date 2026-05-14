@@ -381,42 +381,40 @@ export default function ReviewPresentation({ review, data, onClose, isPreviewMod
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#0A1650', zIndex: 340, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '18px 32px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, gap: 18 }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(191,219,254,0.82)', marginBottom: 4, fontFamily: 'Manrope, sans-serif' }}>
-            {modeLabel}
+    <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 340, display: 'flex', flexDirection: 'column' }}>
+      {/* Header igual al principal */}
+      {/* ── Barra compacta ── */}
+      <div style={{ borderBottom: '1px solid #E5E7EB', background: '#fff', boxShadow: '0 1px 4px rgba(15,23,42,0.06)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', height: 52 }}>
+          {/* Izquierda: título + datos */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, overflow: 'hidden' }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: '#0F1C40', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 320 }}>{portfolioName}{teamName && <span style={{ fontWeight: 500, color: '#64748B' }}>{` · ${teamName}`}</span>}</span>
+            <span style={{ color: '#CBD5E1', fontSize: 16 }}>|</span>
+            <span style={{ fontSize: 13, color: '#6B7A9F', whiteSpace: 'nowrap' }}>Sprint {review.sprint || '—'}</span>
+            <span style={{ color: '#E2E8F0' }}>·</span>
+            <span style={{ fontSize: 13, color: '#6B7A9F', whiteSpace: 'nowrap' }}>{review.fecha || '—'}</span>
+            <span style={{ color: '#E2E8F0' }}>·</span>
+            <span style={{ fontSize: 13, color: '#6B7A9F', whiteSpace: 'nowrap' }}>{review.q || '—'}</span>
+            {isPreviewMode && <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#F87171', background: '#FEF2F2', padding: '2px 8px', borderRadius: 4 }}>Preview</span>}
           </div>
-          <div style={{ fontSize: 28, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.05 }}>
-            <span style={{ fontWeight: 900 }}>{portfolioName}</span>
-            {teamName && <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.82)' }}>{` - ${teamName}`}</span>}
+          {/* Derecha: sección actual + controles */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <span style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, whiteSpace: 'nowrap', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentSlide === 0 ? 'Contenidos' : activeSection?.title || 'Review'}</span>
+            <span style={{ fontSize: 12, color: '#CBD5E1', whiteSpace: 'nowrap' }}>{currentSlide + 1}/{sections.length + 1}</span>
+            {review.jiraPanelUrl && <a href={review.jiraPanelUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, padding: '5px 10px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 6, color: '#1D4ED8', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Jira</a>}
+            <button onClick={() => setCurrentSlide(value => Math.max(0, value - 1))} disabled={currentSlide === 0} style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', border: '1px solid #E5E7EB', color: '#64748B', fontSize: 16, cursor: currentSlide === 0 ? 'not-allowed' : 'pointer', opacity: currentSlide === 0 ? 0.25 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+            <button onClick={() => setCurrentSlide(value => Math.min(sections.length, value + 1))} disabled={currentSlide === sections.length} style={{ width: 30, height: 30, borderRadius: '50%', background: '#F1F5F9', border: '1px solid #E5E7EB', color: '#64748B', fontSize: 16, cursor: currentSlide === sections.length ? 'not-allowed' : 'pointer', opacity: currentSlide === sections.length ? 0.25 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+            <button onClick={onClose} style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '6px 14px', background: '#0032A0', border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer', fontWeight: 700, marginLeft: 4 }}>Salir</button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
-            <span>Sprint {review.sprint || 'Sin dato'}</span>
-            <span style={{ opacity: 0.35 }}>•</span>
-            <span>{review.fecha || 'Sin fecha'}</span>
-            <span style={{ opacity: 0.35 }}>•</span>
-            <span>{review.q || 'Sin quarter'}</span>
-            {isPreviewMode && <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#FCA5A5' }}>Previsualización</span>}
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'Manrope, sans-serif', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {currentSlide === 0 ? 'Tabla de contenidos' : activeSection?.title || 'Review'}
-          </span>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'Manrope, sans-serif' }}>{currentSlide + 1} / {sections.length + 1}</span>
-          {review.jiraPanelUrl && <a href={review.jiraPanelUrl} target="_blank" rel="noreferrer" style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '7px 14px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 8, color: '#fff', textDecoration: 'none', fontFamily: 'Manrope, sans-serif', fontWeight: 700 }}>Panel Jira</a>}
-          <button onClick={() => setCurrentSlide(value => Math.max(0, value - 1))} disabled={currentSlide === 0} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 16, cursor: currentSlide === 0 ? 'not-allowed' : 'pointer', opacity: currentSlide === 0 ? 0.2 : 1 }}>‹</button>
-          <button onClick={() => setCurrentSlide(value => Math.min(sections.length, value + 1))} disabled={currentSlide === sections.length} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 16, cursor: currentSlide === sections.length ? 'not-allowed' : 'pointer', opacity: currentSlide === sections.length ? 0.2 : 1 }}>›</button>
-          <button onClick={onClose} style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '7px 16px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 8, color: '#fff', cursor: 'pointer', fontFamily: 'Manrope, sans-serif', fontWeight: 700 }}>Salir</button>
         </div>
       </div>
 
-      <div style={{ height: 2, background: 'rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <div style={{ height: '100%', width: `${progress}%`, background: '#2BB8D4', transition: 'width 0.3s ease' }} />
+      {/* Barra de progreso */}
+      <div style={{ height: 4, background: '#E5E7EB', flexShrink: 0 }}>
+        <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(to right, #0032A0, #2BB8D4)', transition: 'width 0.3s ease', borderRadius: 4 }} />
       </div>
 
-      <div onClick={handleSlideClick} style={{ flex: 1, overflowY: 'auto', padding: '48px 64px', cursor: 'default', background: '#FFFFFF' }}>
+      <div onClick={handleSlideClick} style={{ flex: 1, overflowY: 'auto', padding: '32px 64px 48px', cursor: 'default', background: '#F8FAFC' }}>
         {currentSlide === 0 ? (
           <>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#1E56A0', marginBottom: 10, fontFamily: 'Manrope, sans-serif' }}>00 · Contenido</div>

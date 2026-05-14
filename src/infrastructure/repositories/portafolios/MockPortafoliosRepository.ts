@@ -18,9 +18,13 @@ export class MockPortafoliosRepository implements IPortafoliosRepository {
     return [...this.data];
   }
 
-  async save(portafolio: Omit<Portafolio, 'id'>): Promise<void> {
-    const newId = `mock_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    this.data.push({ ...portafolio, id: newId });
+  async save(portafolio: Portafolio): Promise<void> {
+    const idx = this.data.findIndex(p => p.id === portafolio.id);
+    if (idx >= 0) {
+      this.data[idx] = portafolio;
+    } else {
+      this.data.push(portafolio);
+    }
   }
 
   async bulkSave(portafolios: Array<Omit<Portafolio, 'id'>>): Promise<void> {

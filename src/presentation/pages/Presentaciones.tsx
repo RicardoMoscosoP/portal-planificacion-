@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import type { Presentacion } from '../../domain/types';
-import { getPresentaciones } from '../../application/services/presentacionService';
+import type { AppData, Presentacion } from '../../domain/types';
+import { getPresentaciones, seedPresentacionesIfEmpty } from '../../application/services/presentacionService';
 import PresentacionPresentation from '../components/PresentacionPresentation';
 
 function loadPresentaciones(): Presentacion[] {
+  seedPresentacionesIfEmpty();
   return getPresentaciones().slice().sort(
     (a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
   );
 }
 
-export default function PresentacionesPage() {
+export default function PresentacionesPage({ data }: { data: AppData }) {
   const [presentaciones] = useState<Presentacion[]>(loadPresentaciones);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [presenting, setPresenting] = useState<Presentacion | null>(null);
   const [page, setPage] = useState(1);
 
@@ -19,7 +19,6 @@ export default function PresentacionesPage() {
   const totalPages = Math.max(1, Math.ceil(presentaciones.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const paged = presentaciones.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const selected = presentaciones.find(p => p.id === selectedId) ?? null;
 
   return (
     <div className="page-shell">
@@ -48,60 +47,47 @@ export default function PresentacionesPage() {
           </div>
         ) : (
           <div className="reviews-table-container">
-            <div className="reviews-header-bar">
-              <span className="reviews-header-info">
-                {selected ? `✓ Seleccionada: ${selected.titulo}` : '👉 Selecciona una presentación para ejecutar'}
-              </span>
-              <div className="reviews-header-actions">
-                <button
-                  type="button"
-                  className="btn-execute-review"
-                  onClick={() => selected && setPresenting(selected)}
-                  disabled={!selected}
-                >
-                  ▶ Presentar
-                </button>
-              </div>
-            </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table className="reviews-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 50 }}>Sel.</th>
-                    <th>Título</th>
-                    <th>Descripción</th>
-                    <th>Capacidad</th>
-                    <th>Fecha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paged.map(p => {
-                    const isSelected = selectedId === p.id;
-                    return (
-                      <tr
-                        key={p.id}
-                        className={isSelected ? 'selected' : ''}
-                        onClick={() => setSelectedId(p.id)}
+            <table className="reviews-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '32%' }} />
+                <col style={{ width: '32%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '12%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>Título</th>
+                  <th style={{ textAlign: 'left' }}>Descripción</th>
+                  <th style={{ textAlign: 'left' }}>Capacidad</th>
+                  <th style={{ textAlign: 'left' }}>Fecha</th>
+                  <th style={{ textAlign: 'left' }}>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paged.map(p => (
+                  <tr key={p.id}>
+                    <td style={{ verticalAlign: 'middle', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span className="review-title">{p.titulo}</span>
+                    </td>
+                    <td style={{ fontSize: 13, color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle', textAlign: 'left' }}>{p.descripcion}</td>
+                    <td style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle', textAlign: 'left' }}>{p.capacidad || '—'}</td>
+                    <td style={{ fontSize: 13, whiteSpace: 'nowrap', verticalAlign: 'middle', textAlign: 'left' }}>{p.fechaCreacion ? new Date(p.fechaCreacion).toLocaleDateString('es-CL') : '—'}</td>
+                    <td style={{ verticalAlign: 'middle', textAlign: 'left' }}>
+                      <button
+                        type="button"
+                        onClick={() => setPresenting(p)}
+                        style={{ fontSize: 13, color: '#0032A0', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap', textDecoration: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                        onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                       >
-                        <td style={{ textAlign: 'center' }}>
-                          <input
-                            type="radio"
-                            name="selected-presentacion"
-                            checked={isSelected}
-                            onChange={() => setSelectedId(p.id)}
-                            onClick={e => e.stopPropagation()}
-                          />
-                        </td>
-                        <td><span className="review-title">{p.titulo}</span></td>
-                        <td style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.descripcion}</td>
-                        <td>{p.capacidad || '—'}</td>
-                        <td>{p.fechaCreacion ? new Date(p.fechaCreacion).toLocaleDateString('es-CL') : '—'}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        ▶ Presentar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <div className="reviews-table-footer">
               <span>Página {safePage} de {totalPages}</span>
               <div className="reviews-pagination">
@@ -117,6 +103,7 @@ export default function PresentacionesPage() {
         <PresentacionPresentation
           presentacion={presenting}
           all={presentaciones}
+          config={data.config}
           onClose={() => setPresenting(null)}
         />
       )}

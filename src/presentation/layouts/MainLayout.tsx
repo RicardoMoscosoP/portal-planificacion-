@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { MdHome, MdMap, MdRateReview, MdSchool, MdDashboard, MdPlayCircle, MdSettings, MdAltRoute } from 'react-icons/md';
 import type { AppData, Config } from '../../domain/types';
 import { betHasActiveMosForQuarter } from '../../application/services/betMos';
@@ -9,7 +9,7 @@ import logoUrl from '../../assets/logo-blue.jpg';
 export type PageKey = 'inicio' | 'bienvenida' | 'roadmap' | 'reviews' | 'studio-reviews' | 'noticias' | 'capacitaciones' | 'business-flows' | 'admin' | 'capacidad' | 'presentaciones';
 
 const PAGE_LABEL: Record<PageKey, string> = {
-  inicio:          'Panel',
+  inicio:          'Panel Principal',
   roadmap:         'Roadmap',
   reviews:         'Reviews',
   'studio-reviews':'Preparar Review',
@@ -92,11 +92,32 @@ export default function MainLayout({ data, config, activePage, onNav, q, onQChan
   const activeBetsCount = data.bets.filter(bet => (bet.activo ?? true) && betHasActiveMosForQuarter(bet, data.mos, `Q${activeQuarter}`)).length;
   const activeIniciativasCount = data.iniciativas.filter(iniciativa => iniciativa.q === activeQuarter).length;
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const closeSidebar = () => setSidebarOpen(false);
+
+  // Cerrar sidebar al navegar en móvil
+  const handleNav = (page: Parameters<typeof onNav>[0]) => {
+    onNav(page);
+    closeSidebar();
+  };
+
+  // Cerrar sidebar con Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeSidebar(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
+      {/* ── OVERLAY MÓVIL ────────────────────────────────────────────── */}
+      {sidebarOpen && (
+        <div className="sb-overlay" onClick={closeSidebar} />
+      )}
+
       {/* ── SIDEBAR ──────────────────────────────────────────────────── */}
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <div className="sb-logo">
           <img
             src={logoUrl}
@@ -114,25 +135,25 @@ export default function MainLayout({ data, config, activePage, onNav, q, onQChan
 
 
         <nav className="sb-nav">
-          <button className={`sb-item${activePage === 'inicio' ? ' active' : ''}`} onClick={() => onNav('inicio')}>
-            {icons.inicio} Panel
+          <button className={`sb-item${activePage === 'inicio' ? ' active' : ''}`} onClick={() => handleNav('inicio')}>
+            {icons.inicio} Panel Principal
           </button>
           <div className="sb-group">Planificación</div>
-          <button className={`sb-item${activePage === 'roadmap' ? ' active' : ''}`} onClick={() => onNav('roadmap')}>
+          <button className={`sb-item${activePage === 'roadmap' ? ' active' : ''}`} onClick={() => handleNav('roadmap')}>
             {icons.roadmap} Roadmap General
           </button>
-          <button className={`sb-item${activePage === 'reviews' ? ' active' : ''}`} onClick={() => onNav('reviews')}>
+          <button className={`sb-item${activePage === 'reviews' ? ' active' : ''}`} onClick={() => handleNav('reviews')}>
             {icons.reviews} Reviews
           </button>
-          <button className={`sb-item${activePage === 'presentaciones' ? ' active' : ''}`} onClick={() => onNav('presentaciones')}>
+          <button className={`sb-item${activePage === 'presentaciones' ? ' active' : ''}`} onClick={() => handleNav('presentaciones')}>
             {icons.presentaciones} Presentaciones
           </button>
           <div className="sb-group">Recursos</div>
-          <button className={`sb-item${activePage === 'capacitaciones' ? ' active' : ''}`} onClick={() => onNav('capacitaciones')}>
-            {icons.capacitaciones} Capacitaciones
-          </button>
-          <button className={`sb-item${activePage === 'business-flows' ? ' active' : ''}`} onClick={() => onNav('business-flows')}>
+          <button className={`sb-item${activePage === 'business-flows' ? ' active' : ''}`} onClick={() => handleNav('business-flows')}>
             {icons['business-flows']} Flujos de Negocio
+          </button>
+          <button className={`sb-item${activePage === 'capacitaciones' ? ' active' : ''}`} onClick={() => handleNav('capacitaciones')}>
+            {icons.capacitaciones} Capacitaciones
           </button>
         </nav>
 
@@ -140,7 +161,7 @@ export default function MainLayout({ data, config, activePage, onNav, q, onQChan
           <SyncStatus onReloadFromSheet={onReloadFromSheet} />
           {onBackToPortfolios && (
             <button
-              onClick={onBackToPortfolios}
+              onClick={() => { onBackToPortfolios(); closeSidebar(); }}
               style={{
                 width: '100%',
                 padding: '6px 8px',
@@ -176,6 +197,10 @@ export default function MainLayout({ data, config, activePage, onNav, q, onQChan
         {/* [layout-header] */}
         <div className="page-hdr">
           <div className="ph-inner">
+            {/* Botón hamburger — solo visible en móvil */}
+            <button className="sb-hamburger" onClick={() => setSidebarOpen(o => !o)} aria-label="Menú">
+              <span /><span /><span />
+            </button>
             {hasPendingChanges && (
               <div style={{
                 marginBottom: 12,
