@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Génesis - Portafolios</title>
+    <title>Génesis - Bets e Iniciativas</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
- 
+
         :root {
             --navy: #0A1650;
-            --navy-light: #1E2C5F;
             --blue-strong: #0032A0;
             --blue-medium: #1E56A0;
             --blue-light: #4B7FD8;
             --cyan: #2BB8D4;
+            --purple: #7F1AAE;
+            --pink: #D4A5C5;
+            --green: #48BB78;
+            --yellow: #ECC94B;
+            --red: #F56565;
             --bg-light: #F5F7FA;
             --text-dark: #0A1650;
             --text-secondary: #666;
@@ -25,7 +29,7 @@
             --border: #DCE7FF;
             --white: #FFFFFF;
         }
- 
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--bg-light) 0%, #EAECF0 100%);
@@ -33,61 +37,239 @@
             min-height: 100vh;
             padding: 2rem;
         }
- 
-        /* HEADER */
-        .page-header {
-            max-width: 1400px;
-            margin: 0 auto 3rem;
-            padding: 0 1rem;
-        }
- 
-        .page-header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--navy);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
-        }
- 
-        .page-header p {
-            font-size: 1.05rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
- 
-        /* CONTAINER */
-        .portfolios-container {
-            max-width: 1400px;
+
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 1rem;
         }
- 
-        /* PORTFOLIO CARD */
-        .portfolio-card {
+
+        /* ===== SECTION HEADER ===== */
+        .section-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.25rem;
+        }
+
+        .section-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== BETS SECTION ===== */
+        .bets-section {
             background: var(--white);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(10, 22, 80, 0.08);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(10, 22, 80, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 2.5rem;
+        }
+
+        .bets-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bets-table thead {
+            background: var(--blue-strong);
+            color: var(--white);
+        }
+
+        .bets-table th {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bets-table td {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        .bets-table tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        .bets-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* BET / LVT COLUMN */
+        .bet-lvt-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .bet-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .bet-icon.alt1 {
+            background: rgba(0, 50, 160, 0.2);
+            color: var(--blue-strong);
+        }
+
+        .bet-icon.alt2 {
+            background: rgba(127, 26, 174, 0.2);
+            color: var(--purple);
+        }
+
+        .bet-icon.alt3 {
+            background: rgba(43, 184, 212, 0.2);
+            color: var(--cyan);
+        }
+
+        .bet-info {
+            flex: 1;
+        }
+
+        .bet-description {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .bet-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            background: rgba(0, 50, 160, 0.08);
+            color: var(--blue-strong);
+            border: 1px solid rgba(0, 50, 160, 0.15);
+        }
+
+        .bet-badge.alt1 {
+            background: rgba(0, 50, 160, 0.08);
+            color: var(--blue-strong);
+            border: 1px solid rgba(0, 50, 160, 0.15);
+        }
+
+        .bet-badge.alt2 {
+            background: rgba(127, 26, 174, 0.08);
+            color: var(--purple);
+            border: 1px solid rgba(127, 26, 174, 0.15);
+        }
+
+        .bet-badge.alt3 {
+            background: rgba(43, 184, 212, 0.08);
+            color: var(--cyan);
+            border: 1px solid rgba(43, 184, 212, 0.15);
+        }
+
+        .bet-product-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            margin-right: 0.35rem;
+        }
+
+        /* MOS COLUMN */
+        .mos-cell {
+            max-width: 250px;
+        }
+
+        .mos-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .mos-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .mos-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mos-indicator {
+            font-weight: 700;
+            min-width: 40px;
+        }
+
+        .mos-quarter {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* VALUE COLUMNS */
+        .value-cell {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 1.25rem 1rem;
+        }
+
+        .value-base {
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .value-meta {
+            color: var(--blue-strong);
+            background: rgba(0, 50, 160, 0.04);
+        }
+
+        .value-real {
+            color: var(--cyan);
+            background: rgba(43, 184, 212, 0.05);
+        }
+
+        /* ===== INICIATIVAS SECTION ===== */
+        .iniciativas-section {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(10, 22, 80, 0.05);
             border: 1px solid var(--border);
         }
- 
-        .portfolio-card:hover {
-            box-shadow: 0 12px 32px rgba(10, 22, 80, 0.12);
-            transform: translateY(-4px);
-        }
- 
-        /* PORTFOLIO HEADER - COMPACTO */
-        .portfolio-header {
+
+        .iniciativas-header {
             background: linear-gradient(135deg, var(--blue-strong) 0%, var(--blue-medium) 100%);
             color: var(--white);
-            padding: 1.5rem 2rem;
+            padding: 1.25rem 1.5rem;
             position: relative;
             overflow: hidden;
         }
- 
-        .portfolio-header::before {
+
+        .iniciativas-header::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -97,394 +279,455 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
         }
- 
-        .portfolio-header-content {
+
+        .iniciativas-header-content {
             position: relative;
             z-index: 1;
             display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-        }
- 
-        .portfolio-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
         }
- 
-        .portfolio-info h2 {
-            font-size: 1.4rem;
+
+        .iniciativas-header h3 {
+            font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 0.25rem;
-            letter-spacing: -0.2px;
+            margin-bottom: 0.15rem;
         }
- 
-        .portfolio-description {
-            font-size: 0.9rem;
+
+        .iniciativas-header p {
+            font-size: 0.85rem;
             opacity: 0.9;
-            line-height: 1.4;
         }
- 
-        /* EQUIPOS SECTION */
-        .equipos-section {
-            padding: 1.5rem 2rem;
-        }
- 
-        .equipos-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
- 
-        .equipos-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--navy);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
- 
-        .equipos-count {
-            background: rgba(0, 50, 160, 0.1);
-            color: var(--blue-strong);
-            padding: 0.3rem 0.7rem;
-            border-radius: 20px;
+
+        .iniciativas-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
             font-size: 0.8rem;
             font-weight: 600;
-        }
- 
-        /* EQUIPO CARD - APILADO */
-        .equipo-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
- 
-        .equipo-card {
-            background: var(--bg-light);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.25rem;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1.5rem;
-            border-left: 4px solid var(--blue-strong);
-        }
- 
-        .equipo-card:hover {
-            background: var(--white);
-            border-color: var(--blue-light);
-            box-shadow: 0 2px 8px rgba(0, 50, 160, 0.08);
-        }
- 
-        .equipo-card.alt1 {
-            border-left-color: var(--blue-strong);
-        }
- 
-        .equipo-card.alt2 {
-            border-left-color: var(--blue-medium);
-        }
- 
-        .equipo-card.alt3 {
-            border-left-color: var(--blue-light);
-        }
- 
-        .equipo-card.alt4 {
-            border-left-color: var(--cyan);
-        }
- 
-        .equipo-info {
-            flex: 1;
-        }
- 
-        .equipo-name {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--navy);
-        }
- 
-        .equipo-actions {
-            display: flex;
-            gap: 0.5rem;
             flex-shrink: 0;
         }
- 
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
+
+        /* INICIATIVAS LIST */
+        .iniciativas-list {
+            padding: 0;
+        }
+
+        .iniciativa-row {
+            padding: 1.25rem 1.5rem;
+            display: flex;
             align-items: center;
-            gap: 0.4rem;
+            justify-content: space-between;
+            gap: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .iniciativa-row:last-child {
+            border-bottom: none;
+        }
+
+        .iniciativa-row:hover {
+            background: var(--bg-light);
+        }
+
+        .iniciativa-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .iniciativa-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.3rem;
+        }
+
+        .iniciativa-product {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .entregables-header {
+            font-size: 0.75rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.3px;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .iniciativa-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .iniciativa-stats {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border-left: 3px solid var(--green);
+        }
+
+        .stat-item.in-progress {
+            border-left-color: var(--yellow);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-light);
             white-space: nowrap;
         }
- 
-        .btn-primary {
-            background: var(--blue-strong);
-            color: var(--white);
+
+        .stat-number {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--green);
+            min-width: 30px;
+            text-align: center;
         }
- 
-        .btn-primary:hover {
-            background: var(--navy-light);
-            box-shadow: 0 2px 8px rgba(0, 50, 160, 0.15);
-            transform: translateY(-1px);
+
+        .stat-item.in-progress .stat-number {
+            color: var(--yellow);
         }
- 
-        .btn-secondary {
-            background: transparent;
-            color: var(--blue-medium);
-            border: 1px solid var(--blue-medium);
-            padding: 0.45rem 0.75rem;
+
+        .iniciativa-mos {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
         }
- 
-        .btn-secondary:hover {
-            background: rgba(0, 50, 160, 0.05);
-            border-color: var(--blue-strong);
-            color: var(--blue-strong);
+
+        .iniciativa-mos-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.35rem;
         }
- 
-        /* PORTFOLIO GRID */
-        .portfolios-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+
+        .mos-indicator-badge {
+            font-weight: 700;
+            min-width: 30px;
         }
- 
-        @media (max-width: 1200px) {
-            .portfolios-grid {
-                grid-template-columns: 1fr;
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .bets-table {
+                font-size: 0.85rem;
+            }
+
+            .bets-table th,
+            .bets-table td {
+                padding: 0.9rem 0.75rem;
+            }
+
+            .iniciativa-stats {
+                gap: 0.75rem;
+            }
+
+            .stat-item {
+                padding: 0.4rem 0.6rem;
             }
         }
- 
-        /* RESPONSIVE */
+
         @media (max-width: 768px) {
-            .page-header h1 {
-                font-size: 1.75rem;
-            }
- 
             body {
                 padding: 1rem;
             }
- 
-            .portfolio-header {
-                padding: 1.25rem;
+
+            .bets-table {
+                font-size: 0.8rem;
+                overflow-x: auto;
+                display: block;
             }
- 
-            .portfolio-header-content {
-                flex-direction: column;
+
+            .bets-table th,
+            .bets-table td {
+                padding: 0.75rem;
             }
- 
-            .portfolio-icon {
-                width: 45px;
-                height: 45px;
-                font-size: 20px;
+
+            .bet-description {
+                font-size: 0.85rem;
             }
- 
-            .portfolio-info h2 {
-                font-size: 1.25rem;
-            }
- 
-            .equipos-section {
-                padding: 1.25rem;
-            }
- 
-            .equipo-card {
+
+            .iniciativa-row {
                 flex-direction: column;
                 align-items: flex-start;
-                padding: 1rem;
+                gap: 0.75rem;
             }
- 
-            .equipo-actions {
+
+            .iniciativa-right {
                 width: 100%;
+                gap: 0.75rem;
             }
- 
-            .btn {
+
+            .iniciativa-stats {
+                width: 100%;
+                gap: 0.5rem;
+            }
+
+            .stat-item {
                 flex: 1;
                 justify-content: center;
+            }
+
+            .stat-number {
+                min-width: auto;
             }
         }
     </style>
 </head>
 <body>
- 
-    <!-- HEADER -->
-    <div class="page-header">
-        <h1>Portafolios</h1>
-        <p>Gestiona los equipos y accesos de cada unidad operativa.</p>
-    </div>
- 
-    <!-- PORTFOLIOS GRID -->
-    <div class="portfolios-container">
-        <div class="portfolios-grid">
- 
-            <!-- PORTFOLIO 1: DISTRIBUCIÓN -->
-            <div class="portfolio-card">
-                <div class="portfolio-header">
-                    <div class="portfolio-header-content">
-                        <div class="portfolio-icon">📦</div>
-                        <div class="portfolio-info">
-                            <h2>Portafolio Distribución</h2>
-                            <p class="portfolio-description">Supervisión de la red de transporte nacional, optimización de última milla y planificación estratégica de rutas.</p>
-                        </div>
-                    </div>
-                </div>
- 
-                <div class="equipos-section">
-                    <div class="equipos-header">
-                        <span class="equipos-title">Equipos (2)</span>
-                        <span class="equipos-count">2</span>
-                    </div>
- 
-                    <div class="equipo-grid">
-                        <div class="equipo-card alt1">
-                            <div class="equipo-info">
-                                <h3 class="equipo-name">Planificación del Transporte</h3>
-                            </div>
-                            <div class="equipo-actions">
-                                <button class="btn btn-primary">Sitio</button>
-                                <button class="btn btn-secondary">⚙️</button>
-                            </div>
-                        </div>
- 
-                        <div class="equipo-card alt2">
-                            <div class="equipo-info">
-                                <h3 class="equipo-name">Optimización Last Mile</h3>
-                            </div>
-                            <div class="equipo-actions">
-                                <button class="btn btn-primary">Sitio</button>
-                                <button class="btn btn-secondary">⚙️</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
- 
-            <!-- PORTFOLIO 2: COURIER -->
-            <div class="portfolio-card">
-                <div class="portfolio-header">
-                    <div class="portfolio-header-content">
-                        <div class="portfolio-icon">📬</div>
-                        <div class="portfolio-info">
-                            <h2>Portafolio Courier</h2>
-                            <p class="portfolio-description">Experiencia de cliente en servicios courier, seguimiento en tiempo real y entregas express.</p>
-                        </div>
-                    </div>
-                </div>
- 
-                <div class="equipos-section">
-                    <div class="equipos-header">
-                        <span class="equipos-title">Equipos (1)</span>
-                        <span class="equipos-count">1</span>
-                    </div>
- 
-                    <div class="equipo-grid">
-                        <div class="equipo-card alt3">
-                            <div class="equipo-info">
-                                <h3 class="equipo-name">Experiencia Courier</h3>
-                            </div>
-                            <div class="equipo-actions">
-                                <button class="btn btn-primary">Sitio</button>
-                                <button class="btn btn-secondary">⚙️</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
- 
-            <!-- PORTFOLIO 3: OPERACIÓN -->
-            <div class="portfolio-card">
-                <div class="portfolio-header">
-                    <div class="portfolio-header-content">
-                        <div class="portfolio-icon">⚙️</div>
-                        <div class="portfolio-info">
-                            <h2>Portafolio Operación</h2>
-                            <p class="portfolio-description">Operación del transporte, gestión de flotas y control de calidad en entregas.</p>
-                        </div>
-                    </div>
-                </div>
- 
-                <div class="equipos-section">
-                    <div class="equipos-header">
-                        <span class="equipos-title">Equipos (3)</span>
-                        <span class="equipos-count">3</span>
-                    </div>
- 
-                    <div class="equipo-grid">
-                        <div class="equipo-card alt4">
-                            <div class="equipo-info">
-                                <h3 class="equipo-name">Gestión de Flotas</h3>
-                            </div>
-                            <div class="equipo-actions">
-                                <button class="btn btn-primary">Sitio</button>
-                                <button class="btn btn-secondary">⚙️</button>
-                            </div>
-                        </div>
- 
-                        <div class="equipo-card alt1">
-                            <div class="equipo-info">
-                                <h3 class="equipo-name">Control de Calidad</h3>
-                            </div>
-                            <div class="equipo-actions">
-                                <button class="btn btn-primary">Sitio</button>
-                                <button class="btn btn-secondary">⚙️</button>
-                            </div>
-                        </div>
- 
-                        <div class="equipo-card alt2">
-                            <div class="equipo-info">
-                                <h3 class="equipo-name">Compliance Operacional</h3>
-                            </div>
-                            <div class="equipo-actions">
-                                <button class="btn btn-primary">Sitio</button>
-                                <button class="btn btn-secondary">⚙️</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
- 
+
+    <div class="container">
+
+        <!-- ===== BETS SECTION ===== -->
+        <div class="section-header">
+            <div class="section-label">Métricas de Éxito (MOS) — Q2</div>
+            <div class="section-title">MOS del Bet — Q2</div>
+            <p class="section-desc">Indicadores del quarter Q2. Solo se muestran los MOS activos en este quarter.</p>
         </div>
+
+        <div class="bets-section">
+            <table class="bets-table">
+                <thead>
+                    <tr>
+                        <th>Bet / LVT</th>
+                        <th>MOS del Bet</th>
+                        <th>Base</th>
+                        <th>Meta</th>
+                        <th>Real</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="bet-lvt-content">
+                                <div class="bet-icon alt1">●</div>
+                                <div class="bet-info">
+                                    <div class="bet-description">Construir un sistema de optimización de rutas end-to-end para primera y última milla, generando planes factibles, eficientes y escalables con restricciones operativas reales.</div>
+                                    <span class="bet-product-label">Producto:</span><span class="bet-badge alt1">Optimizador de Rutas</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="mos-cell">
+                            <div class="mos-item">
+                                <div class="mos-name">
+                                    <span class="mos-indicator">(+)</span>
+                                    Productividad de rutas (OS/ruta, kg/camión)
+                                </div>
+                                <div class="mos-quarter">Q2</div>
+                            </div>
+                        </td>
+                        <td class="value-cell value-base">42 OS/ruta</td>
+                        <td class="value-cell value-meta">52 OS/ruta</td>
+                        <td class="value-cell value-real">47 OS/ruta</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="bet-lvt-content">
+                                <div class="bet-icon alt2">●</div>
+                                <div class="bet-info">
+                                    <div class="bet-description">Desarrollar un sistema de direcciones y georreferenciación confiable, estandarizado y autocorrectivo, que habilite la optimización de rutas a escala.</div>
+                                    <span class="bet-product-label">Producto:</span><span class="bet-badge alt2">Geosolver</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="mos-cell">
+                            <div class="mos-item">
+                                <div class="mos-name">
+                                    <span class="mos-indicator">(-)</span>
+                                    % fallo por direcciones (BA / DI / MR / MRH)
+                                </div>
+                                <div class="mos-quarter">Q2</div>
+                            </div>
+                        </td>
+                        <td class="value-cell value-base">18%</td>
+                        <td class="value-cell value-meta">10%</td>
+                        <td class="value-cell value-real">14%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="bet-lvt-content">
+                                <div class="bet-icon alt3">●</div>
+                                <div class="bet-info">
+                                    <div class="bet-description">Automatizar y escalar la planificación de reservas y abastecimiento, asegurando correctitud, anticipación y alineación con la capacidad real de ruteo.</div>
+                                    <span class="bet-product-label">Producto:</span><span class="bet-badge alt3">Smart Retiros</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="mos-cell">
+                            <div class="mos-item">
+                                <div class="mos-name">
+                                    <span class="mos-indicator">(+)</span>
+                                    % de reservas asignadas automáticamente
+                                </div>
+                                <div class="mos-quarter">Q2</div>
+                            </div>
+                        </td>
+                        <td class="value-cell value-base">3%</td>
+                        <td class="value-cell value-meta">40%</td>
+                        <td class="value-cell value-real">12%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== INICIATIVAS SECTION ===== -->
+        <div class="section-header">
+            <div class="section-label">Iniciativas del Quarter</div>
+        </div>
+
+        <div class="iniciativas-section">
+            <div class="iniciativas-header">
+                <div class="iniciativas-header-content">
+                    <div>
+                        <h3>Iniciativas en Curso</h3>
+                        <p>Estado y progreso de entregables</p>
+                    </div>
+                    <div class="iniciativas-count">4 Iniciativas</div>
+                </div>
+            </div>
+
+            <div class="iniciativas-list">
+
+                <!-- INICIATIVA 1 -->
+                <div class="iniciativa-row">
+                    <div class="iniciativa-left">
+                        <div class="iniciativa-name">Optimizador de Rutas - MVP</div>
+                        <div class="iniciativa-product">Producto: Optimizador de Rutas</div>
+                        <div class="iniciativa-mos">
+                            <div class="iniciativa-mos-item">
+                                <span class="mos-indicator-badge">(+)</span>
+                                <span>Productividad de rutas (OS/ruta, kg/camión)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="iniciativa-right">
+                        <div>
+                            <div class="entregables-header">Entregables</div>
+                            <div class="iniciativa-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Terminadas</div>
+                                    <div class="stat-number">2</div>
+                                </div>
+                                <div class="stat-item in-progress">
+                                    <div class="stat-label">En Progreso</div>
+                                    <div class="stat-number">1</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INICIATIVA 2 -->
+                <div class="iniciativa-row">
+                    <div class="iniciativa-left">
+                        <div class="iniciativa-name">Geosolver - Direcciones Confiables</div>
+                        <div class="iniciativa-product">Producto: Geosolver</div>
+                        <div class="iniciativa-mos">
+                            <div class="iniciativa-mos-item">
+                                <span class="mos-indicator-badge">(-)</span>
+                                <span>% fallo por direcciones (BA / DI / MR / MRH)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="iniciativa-right">
+                        <div>
+                            <div class="entregables-header">Entregables</div>
+                            <div class="iniciativa-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Terminadas</div>
+                                    <div class="stat-number">1</div>
+                                </div>
+                                <div class="stat-item in-progress">
+                                    <div class="stat-label">En Progreso</div>
+                                    <div class="stat-number">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INICIATIVA 3 -->
+                <div class="iniciativa-row">
+                    <div class="iniciativa-left">
+                        <div class="iniciativa-name">Smart Retiros - Automatización</div>
+                        <div class="iniciativa-product">Producto: Smart Retiros</div>
+                        <div class="iniciativa-mos">
+                            <div class="iniciativa-mos-item">
+                                <span class="mos-indicator-badge">(+)</span>
+                                <span>% de reservas asignadas automáticamente</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="iniciativa-right">
+                        <div>
+                            <div class="entregables-header">Entregables</div>
+                            <div class="iniciativa-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Terminadas</div>
+                                    <div class="stat-number">0</div>
+                                </div>
+                                <div class="stat-item in-progress">
+                                    <div class="stat-label">En Progreso</div>
+                                    <div class="stat-number">1</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INICIATIVA 4 -->
+                <div class="iniciativa-row">
+                    <div class="iniciativa-left">
+                        <div class="iniciativa-name">Dashboard Operacional</div>
+                        <div class="iniciativa-product">Producto: Dashboard Operacional</div>
+                        <div class="iniciativa-mos">
+                            <div class="iniciativa-mos-item">
+                                <span class="mos-indicator-badge">(+)</span>
+                                <span>Monitoreo de operaciones en tiempo real</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="iniciativa-right">
+                        <div>
+                            <div class="entregables-header">Entregables</div>
+                            <div class="iniciativa-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Terminadas</div>
+                                    <div class="stat-number">0</div>
+                                </div>
+                                <div class="stat-item in-progress">
+                                    <div class="stat-label">En Progreso</div>
+                                    <div class="stat-number">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
- 
-    <script>
-        // Manejar clicks en botones
-        document.querySelectorAll('.btn-primary').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const equipoName = btn.closest('.equipo-card').querySelector('.equipo-name').textContent;
-                console.log('Ir a Sitio:', equipoName);
-                // window.location.href = `/sitio/${equipoName}`;
-            });
-        });
- 
-        document.querySelectorAll('.btn-secondary').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const equipoName = btn.closest('.equipo-card').querySelector('.equipo-name').textContent;
-                console.log('Configurar:', equipoName);
-                // Abrir modal de configuración
-            });
-        });
-    </script>
- 
+
 </body>
 </html>

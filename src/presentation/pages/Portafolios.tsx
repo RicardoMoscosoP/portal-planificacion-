@@ -18,7 +18,7 @@ function PortafolioCard({
   abierto: boolean;
   isCorporate: boolean;
   onToggle: () => void;
-  onSelectEquipo: (equipo: Equipo & { config?: boolean }) => void;
+  onSelectEquipo: (equipo: Equipo & { config?: boolean; portafolioNombre?: string }) => void;
   teamsListRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -86,6 +86,7 @@ function PortafolioCard({
                 equipo={equipo}
                 isLast={idx === (portafolio.equipos?.length ?? 0) - 1}
                 isCorporate={isCorporate}
+                portafolioNombre={portafolio.nombre}
                 onSelectEquipo={onSelectEquipo}
               />
             ))}
@@ -97,11 +98,12 @@ function PortafolioCard({
 }
 
 // ─── Sub-component: fila de equipo con hover ─────────────────────────────────
-function TeamRow({ equipo, isLast, isCorporate, onSelectEquipo }: {
+function TeamRow({ equipo, isLast, isCorporate, onSelectEquipo, portafolioNombre }: {
   equipo: Equipo;
   isLast: boolean;
   isCorporate: boolean;
-  onSelectEquipo: (equipo: Equipo & { config?: boolean }) => void;
+  portafolioNombre: string;
+  onSelectEquipo: (equipo: Equipo & { config?: boolean; portafolioNombre?: string }) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -123,7 +125,7 @@ function TeamRow({ equipo, isLast, isCorporate, onSelectEquipo }: {
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           type="button"
-          onClick={() => onSelectEquipo(equipo)}
+          onClick={() => onSelectEquipo({ ...equipo, portafolioNombre })}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: '#0032A0', color: '#fff', border: 'none', cursor: 'pointer' }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#00237a'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#0032A0'; }}
@@ -133,7 +135,7 @@ function TeamRow({ equipo, isLast, isCorporate, onSelectEquipo }: {
         {isCorporate && (
           <button
             type="button"
-            onClick={() => onSelectEquipo({ ...equipo, config: true })}
+            onClick={() => onSelectEquipo({ ...equipo, config: true, portafolioNombre })}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: '#f1f5f9', color: '#666', border: 'none', cursor: 'pointer' }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#e2e8f0'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9'; }}
@@ -151,7 +153,7 @@ function TeamRow({ equipo, isLast, isCorporate, onSelectEquipo }: {
 
 interface Props {
   portafolios: Portafolio[];
-  onSelectEquipo: (equipo: Equipo & { config?: boolean }) => void;
+  onSelectEquipo: (equipo: Equipo & { config?: boolean; portafolioNombre?: string }) => void;
   isAdmin?: boolean;
   onPortafolioCreated?: (portafolio: Portafolio) => void;
   usuario?: Usuario;
@@ -168,9 +170,17 @@ export default function Portafolios({ portafolios, onSelectEquipo, isAdmin = fal
   const [confirmToggle, setConfirmToggle] = useState<{ portafolioId: string; desactivar: boolean } | null>(null);
   const teamsListRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Sincronizar cuando el prop cambia (ej: recarga desde Firestore)
+  // Cargar desde el repositorio al montar (para GAS/Firestore)
+  // Si el repo devuelve datos, éstos tienen prioridad sobre el prop vacío que Admin pasa
   useEffect(() => {
-    setListaPortafolios(portafolios);
+    repo.getAll()
+      .then(lista => { if (lista.length > 0) setListaPortafolios(lista); })
+      .catch(() => { /* mantener prop como fallback */ });
+  }, [repo]);
+
+  // Sincronizar cuando el prop cambia y trae datos reales (ej: modo mock local)
+  useEffect(() => {
+    if (portafolios.length > 0) setListaPortafolios(portafolios);
   }, [portafolios]);
 
   const persistirPortafolios = (nuevaLista: Portafolio[]) => {
@@ -197,10 +207,13 @@ export default function Portafolios({ portafolios, onSelectEquipo, isAdmin = fal
       persistirPortafolios(nuevaLista);
       onPortafolioCreated?.(portafolioConOrden);
     }
-    // Persistir en Firestore vía GAS
-    repo.save(portafolioGuardado).catch(() => {
-      setModal({ open: true, msg: 'No se pudo guardar en Firestore. Verifica la conexión.', error: true });
-    });
+    // Persistir en Firestore vía GAS y refrescar lista (incluye el nuevo equipo creado)
+    repo.save(portafolioGuardado)
+      .then(() => repo.getAll())
+      .then(lista => { if (lista.length > 0) setListaPortafolios(lista); })
+      .catch(() => {
+        setModal({ open: true, msg: 'No se pudo guardar en Firestore. Verifica la conexión.', error: true });
+      });
     setMostrarFormulario(false);
   };
 

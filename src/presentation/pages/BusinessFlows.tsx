@@ -67,13 +67,8 @@ function FlowCard({ flow, capacidad }: { flow: BusinessFlow; capacidad?: Capacid
             {flow.icono ?? '🧭'}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
               <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color }}>Flujo</div>
-              {capacidad && (
-                <span style={{ fontSize: 10, fontWeight: 700, color: capacidad.color, background: capacidad.color + '18', borderRadius: 5, padding: '1px 7px', border: `1px solid ${capacidad.color}35` }}>
-                  {capacidad.label}
-                </span>
-              )}
             </div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#0F1C40', lineHeight: 1.2, marginBottom: open ? 0 : 4 }}>{flow.titulo}</div>
             {!open && (
@@ -90,34 +85,36 @@ function FlowCard({ flow, capacidad }: { flow: BusinessFlow; capacidad?: Capacid
           <div style={{ padding: '0 20px 20px', borderTop: `1px solid ${color}20` }}>
             <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.65, margin: '16px 0 14px' }}>{flow.descripcionTarjeta}</p>
 
-            {/* Capacidad relacionada */}
-            {capacidad && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 14px', padding: '8px 12px', background: '#F8FAFF', border: '1px solid #E2E8F0', borderRadius: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Capacidad</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: capacidad.color, background: capacidad.color + '18', borderRadius: 5, padding: '2px 9px', border: `1px solid ${capacidad.color}35` }}>
-                  {capacidad.nombre}
-                </span>
-              </div>
-            )}
-
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
               {flow.confluenceUrl ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <a href={flow.confluenceUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, textDecoration: 'none', fontFamily: 'Manrope, sans-serif', border: '1px solid #C7D7FE' }}>
-                    📄 Abrir en Confluence ↗
-                  </a>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <a href={flow.confluenceUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, textDecoration: 'none', fontFamily: 'Manrope, sans-serif', border: '1px solid #C7D7FE' }}>
+                      📄 Abrir en Confluence ↗
+                    </a>
+                    {capacidad && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: capacidad.color, background: capacidad.color + '18', borderRadius: 5, padding: '3px 10px', border: `1px solid ${capacidad.color}35` }}>
+                        {capacidad.nombre}
+                      </span>
+                    )}
+                  </div>
                   <span style={{ fontSize: 10, color: '#94A3B8', paddingLeft: 4, wordBreak: 'break-all' }}>{flow.confluenceUrl}</span>
                 </div>
               ) : null}
               {flow.presentacionUrl ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <button type="button" onClick={() => setEmbedUrl(flow.presentacionUrl!)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: `${color}12`, color, fontSize: 12, fontWeight: 800, fontFamily: 'Manrope, sans-serif', border: `1px solid ${color}35`, cursor: 'pointer' }}>
-                    🎞 Ver presentación
+                  <button type="button" onClick={() => setEmbedUrl(flow.presentacionUrl!)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 10, background: '#EEF2FF', color: '#1D4ED8', fontSize: 12, fontWeight: 800, fontFamily: 'Manrope, sans-serif', border: '1px solid #C7D7FE', cursor: 'pointer' }}>
+                    🎞 Ver presentación ↗
                   </button>
                   <span style={{ fontSize: 10, color: '#94A3B8', paddingLeft: 4, wordBreak: 'break-all' }}>{flow.presentacionUrl}</span>
                 </div>
               ) : null}
-              {!flow.confluenceUrl && !flow.presentacionUrl && (
+              {!flow.confluenceUrl && !flow.presentacionUrl && capacidad && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: capacidad.color, background: capacidad.color + '18', borderRadius: 5, padding: '3px 10px', border: `1px solid ${capacidad.color}35` }}>
+                  {capacidad.nombre}
+                </span>
+              )}
+              {!flow.confluenceUrl && !flow.presentacionUrl && !capacidad && (
                 <span style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>Sin recursos configurados aún.</span>
               )}
             </div>

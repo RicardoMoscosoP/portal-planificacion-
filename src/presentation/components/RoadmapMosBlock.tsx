@@ -1,10 +1,87 @@
 import { useEffect, useState } from 'react';
-import type { AppData, Bet, MOS } from '../../domain/types';
+import type { AppData, Bet, Iniciativa, MOS } from '../../domain/types';
 import Roadmap from '../pages/Roadmap';
 import { getBetProducts, getMosByBet, getMosQuarters, getActiveMosByBetAndQuarter } from '../../application/services/betMos';
 
 const AVAILABLE_QS = [1, 2, 3, 4] as const;
 export type RoadmapMosView = number;
+
+export function IniciativasSection({ iniciativas, mos, bets, q }: { iniciativas: Iniciativa[]; mos: MOS[]; bets: Bet[]; q: number }) {
+  const qStr = `Q${q}`;
+  const qInits = iniciativas.filter(i => i.q === q && i.activo !== false);
+  if (qInits.length === 0) {
+    return (
+      <div style={{ background: '#fff', border: '1px dashed #DCE7FF', borderRadius: 12, padding: 20, color: '#999', fontSize: 13, fontStyle: 'italic' }}>
+        No hay iniciativas activas en Q{q}.
+      </div>
+    );
+  }
+  return (
+    <div style={{ background: '#fff', border: '1px solid #DCE7FF', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(10,22,80,0.05)' }}>
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #0032A0 0%, #1E56A0 100%)', color: '#fff', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>Iniciativas en Curso</div>
+        <div style={{ background: 'rgba(255,255,255,0.2)', padding: '3px 10px', borderRadius: 5, fontSize: 11, fontWeight: 600 }}>
+          {qInits.length} Iniciativas
+        </div>
+      </div>
+      {/* Rows */}
+      <div>
+        {qInits.map((ini, idx) => {
+          const ents = ini.entregables ?? [];
+          const done = ents.filter(e => e.activo !== false && e.estado === 'done').length;
+          const inProgress = ents.filter(e => e.activo !== false && e.estado === 'in_progress').length;
+          // MOS: primero mos_asociados filtrados por Q, si vacío → MOS del Bet del producto
+          let mosList: MOS[] = (ini.mos_asociados ?? []).map(id => mos.find(m => m.id === id)).filter(Boolean).filter(m => getMosQuarters(m as MOS).includes(qStr)) as MOS[];
+          if (mosList.length === 0) {
+            const bet = bets.find(b => b.activo !== false && ((b.productos ?? []).includes(ini.producto) || b.producto === ini.producto));
+            if (bet) mosList = getActiveMosByBetAndQuarter(bet, mos, qStr);
+          }
+          return (
+            <div
+              key={ini.id}
+              style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderBottom: idx < qInits.length - 1 ? '1px solid #DCE7FF' : 'none', transition: 'background 0.15s', cursor: 'default' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#F5F7FA')}
+              onMouseLeave={e => (e.currentTarget.style.background = '')}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#0A1650', marginBottom: 2 }}>{ini.emoji} {ini.nombre}</div>
+                <div style={{ fontSize: 11.5, color: '#666', fontWeight: 500 }}>Producto: {ini.producto}</div>
+                {mosList.length > 0 && (
+                  <div style={{ borderTop: '1px solid #DCE7FF', paddingTop: 6, marginTop: 6 }}>
+                    {mosList.map(m => {
+                      const ind = m.descripcion.trim().startsWith('(+)') ? '(+)' : (m.descripcion.trim().startsWith('(-)') || m.descripcion.trim().startsWith('(–)')) ? '(–)' : '';
+                          const desc = m.descripcion.replace(/^\([+\-–]\)\s*/, '');
+                      return (
+                        <div key={m.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginTop: 3 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, minWidth: 28, color: '#0A1650', flexShrink: 0 }}>{ind}</span>
+                          <span style={{ fontSize: 11, color: '#555', lineHeight: 1.4 }}>{desc}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div style={{ flexShrink: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.3px', color: '#999', marginBottom: 5 }}>Entregables</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', background: '#F5F7FA', borderRadius: 7, borderLeft: '3px solid #48BB78' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#999', whiteSpace: 'nowrap' }}>Terminadas</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#48BB78', minWidth: 22, textAlign: 'center' }}>{done}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', background: '#F5F7FA', borderRadius: 7, borderLeft: '3px solid #ECC94B' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#999', whiteSpace: 'nowrap' }}>En Progreso</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#ECC94B', minWidth: 22, textAlign: 'center' }}>{inProgress}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function MosSection({ bets, mos, q }: { bets: Bet[]; mos: MOS[]; q?: string }) {
   const activeBets = bets
@@ -25,88 +102,93 @@ export function MosSection({ bets, mos, q }: { bets: Bet[]; mos: MOS[]; q?: stri
 
   if (rows.length === 0) {
     return (
-      <div style={{ background: '#fff', border: '1px dashed var(--border)', borderRadius: 16, padding: 20, color: 'var(--muted)', fontSize: 13, fontStyle: 'italic' }}>
+      <div style={{ background: '#fff', border: '1px dashed #DCE7FF', borderRadius: 12, padding: 20, color: '#999', fontSize: 13, fontStyle: 'italic' }}>
         No hay MOS del Bet configurados.
       </div>
     );
   }
 
   return (
-    <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid #E5EAF5', background: '#F8FAFF' }}>
-        <div style={{ fontSize: 10, fontWeight: 800, color: '#0032A0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Manrope, sans-serif', marginBottom: 4 }}>
-          MOS del Bet{q ? ` — ${q}` : ''}
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--muted)' }}>{q ? `Indicadores del quarter ${q}. Solo se muestran los MOS activos en este quarter.` : 'Resumen completo de indicadores del bet en todos los quarters.'}</div>
-      </div>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-          <colgroup>
-            <col style={{ width: '38%' }} />
-            <col style={{ width: '38%' }} />
-            <col style={{ width: '8%' }} />
-            <col style={{ width: '8%' }} />
-            <col style={{ width: '8%' }} />
-          </colgroup>
-          <thead>
-            <tr style={{ background: 'linear-gradient(135deg, #0032A0 0%, #1B5FCC 100%)' }}>
-              <th style={{ textAlign: 'left', padding: '8px 14px', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'Manrope, sans-serif' }}>Bet / LVT</th>
-              <th style={{ textAlign: 'left', padding: '8px 14px', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'Manrope, sans-serif' }}>MOS del Bet</th>
-              <th style={{ textAlign: 'center', padding: '8px 10px', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'Manrope, sans-serif' }}>Base</th>
-              <th style={{ textAlign: 'center', padding: '8px 10px', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'Manrope, sans-serif' }}>Meta</th>
-              <th style={{ textAlign: 'center', padding: '8px 10px', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'Manrope, sans-serif' }}>Real</th>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* ── Tabla Bets / MOS ── */}
+      <div style={{ background: '#fff', border: '1px solid #DCE7FF', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(10,22,80,0.05)' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+          <thead style={{ background: '#0032A0', color: '#fff' }}>
+            <tr>
+              <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Bet / LVT</th>
+              <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>MOS del Bet</th>
+              <th style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 80 }}>Base</th>
+              <th style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 80 }}>Meta</th>
+              <th style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 80 }}>Real</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ bet, activeMos }, betIndex) => {
-              return activeMos.map((item, mosIndex) => (
-                <tr
-                  key={item.id}
-                  style={{ borderTop: mosIndex === 0 && betIndex > 0 ? '1px solid #E5EAF5' : 'none', transition: 'background 0.12s' }}
-                  onMouseEnter={event => (event.currentTarget.style.background = '#F8FAFF')}
-                  onMouseLeave={event => (event.currentTarget.style.background = 'transparent')}
-                >
-                  {mosIndex === 0 && (
-                    <td rowSpan={activeMos.length} style={{ padding: '10px 14px', verticalAlign: 'top', borderRight: '2px solid #F1F5F9' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: bet.color, flexShrink: 0, marginTop: 3 }} />
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#0F1C40', lineHeight: 1.4, marginBottom: 4 }}>{bet.descripcion}</div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                            {getBetProducts(bet).map(product => (
-                              <span key={product} style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, color: '#fff', background: bet.color, padding: '2px 7px', borderRadius: 4, fontFamily: 'Manrope, sans-serif', letterSpacing: '0.06em' }}>
-                                {product}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  )}
-                  <td style={{ padding: '2px 14px', verticalAlign: 'middle', maxWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, overflow: 'hidden', minHeight: 22 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: bet.color, flexShrink: 0, marginTop: 5 }} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.25, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.descripcion}</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                          {getMosQuarters(item).map(quarter => (
-                            <span key={`${item.id}_${quarter}`} style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, color: bet.color, background: `${bet.color}12`, padding: '2px 6px', borderRadius: 999 }}>
-                              {quarter}
-                            </span>
-                          ))}
-                        </div>
+            {rows.map(({ bet, activeMos }, betIndex) => (
+              <tr
+                key={bet.id}
+                style={{ borderBottom: betIndex < rows.length - 1 ? '1px solid #DCE7FF' : 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#F5F7FA')}
+                onMouseLeave={e => (e.currentTarget.style.background = '')}
+              >
+                {/* Bet / LVT */}
+                <td style={{ padding: '20px', verticalAlign: 'top', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2, background: `${bet.color}33`, color: bet.color }}>●</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 8, lineHeight: 1.4, color: '#0A1650', fontSize: 14 }}>{bet.descripcion}</div>
+                      <div>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.2px', marginRight: 5 }}>Producto:</span>
+                        {getBetProducts(bet).map(product => (
+                          <span key={product} style={{ display: 'inline-block', padding: '4px 9px', borderRadius: 4, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', background: `${bet.color}14`, color: bet.color, border: `1px solid ${bet.color}26`, marginRight: 4 }}>
+                            {product}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                  </td>
-                  <td style={{ padding: '2px 10px', verticalAlign: 'middle', textAlign: 'center' }}><span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{item.linea_base || '—'}</span></td>
-                  <td style={{ padding: '2px 10px', verticalAlign: 'middle', textAlign: 'center' }}><span style={{ fontSize: 12, fontWeight: 700, color: bet.color }}>{item.meta || '—'}</span></td>
-                  <td style={{ padding: '2px 10px', verticalAlign: 'middle', textAlign: 'center' }}><span style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>{item.actual || '—'}</span></td>
-                </tr>
-              ));
-            })}
+                  </div>
+                </td>
+                {/* MOS del Bet */}
+                <td style={{ padding: '20px', verticalAlign: 'top', maxWidth: 260, textAlign: 'left' }}>
+                  {activeMos.map((item, idx) => {
+                    const indicator = item.descripcion.trim().startsWith('(+)') ? '(+)' : (item.descripcion.trim().startsWith('(-)') || item.descripcion.trim().startsWith('(–)')) ? '(–)' : '';
+                    const descText = item.descripcion.replace(/^\([+\-–]\)\s*/, '');
+                    return (
+                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 12 : 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13.5, marginBottom: 2, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                          {indicator && <span style={{ fontWeight: 700, minWidth: 32, color: '#0A1650', flexShrink: 0 }}>{indicator}</span>}
+                          <span style={{ color: '#0A1650', lineHeight: 1.4 }}>{descText}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: '#999', paddingLeft: indicator ? 40 : 0 }}>
+                          {q ? q : getMosQuarters(item).join(', ')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </td>
+                {/* Base */}
+                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#666', background: 'rgba(0,0,0,0.02)' }}>
+                  {activeMos.map((item, idx) => (
+                    <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0 }}>{item.linea_base || '—'}</div>
+                  ))}
+                </td>
+                {/* Meta */}
+                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#0032A0', background: 'rgba(0,50,160,0.04)' }}>
+                  {activeMos.map((item, idx) => (
+                    <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0 }}>{item.meta || '—'}</div>
+                  ))}
+                </td>
+                {/* Real */}
+                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#2BB8D4', background: 'rgba(43,184,212,0.05)' }}>
+                  {activeMos.map((item, idx) => (
+                    <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0 }}>{item.actual || '—'}</div>
+                  ))}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
+
     </div>
   );
 }

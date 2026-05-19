@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import type { AppData, Presentacion } from '../../domain/types';
-import { getPresentaciones, seedPresentacionesIfEmpty } from '../../application/services/presentacionService';
 import PresentacionPresentation from '../components/PresentacionPresentation';
 
-function loadPresentaciones(): Presentacion[] {
-  seedPresentacionesIfEmpty();
-  return getPresentaciones().slice().sort(
+function sortPresentaciones(list: Presentacion[]): Presentacion[] {
+  return list.slice().sort(
     (a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
   );
 }
 
 export default function PresentacionesPage({ data }: { data: AppData }) {
-  const [presentaciones] = useState<Presentacion[]>(loadPresentaciones);
+  const presentaciones = sortPresentaciones(data.presentaciones ?? []);
   const [presenting, setPresenting] = useState<Presentacion | null>(null);
   const [page, setPage] = useState(1);
 

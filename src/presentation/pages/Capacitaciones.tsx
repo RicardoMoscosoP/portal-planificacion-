@@ -99,19 +99,14 @@ export default function Capacitaciones({ data }: Props) {
                     <span style={{ fontSize: 26, flexShrink: 0 }}>{cap.emoji || '📘'}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cap.titulo}</div>
-                      {/* Chips de capacidad y apps en el header */}
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 5 }}>
-                        {capObj && (
+                      {/* Chip de capacidad en el header */}
+                      {capObj && (
+                        <div style={{ display: 'flex', gap: 6, marginTop: 5 }}>
                           <span style={{ fontSize: 10, fontWeight: 700, color: capObj.color, background: capObj.color + '18', borderRadius: 5, padding: '2px 7px', border: `1px solid ${capObj.color}35` }}>
                             {capObj.label}
                           </span>
-                        )}
-                        {capApps.map(app => (
-                          <span key={app.id} style={{ fontSize: 10, fontWeight: 700, color: '#0032A0', background: '#EEF2FF', borderRadius: 5, padding: '2px 7px', border: '1px solid #C7D7FE' }}>
-                            {app.nombre}
-                          </span>
-                        ))}
-                      </div>
+                        </div>
+                      )}
                     </div>
                     <span style={{ fontSize: 12, color: '#94A3B8', flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
                   </button>

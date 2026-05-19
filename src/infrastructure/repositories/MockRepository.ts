@@ -5,6 +5,7 @@
 
 import type { IDataRepository } from '../../domain/interfaces/IDataRepository';
 import type { AppData, Entregable } from '../../domain/types';
+import { getPresentaciones } from '../../application/services/presentacionService';
 
 export const MOCK_DATA: AppData = {
   config: {
@@ -22,15 +23,15 @@ export const MOCK_DATA: AppData = {
     vision: 'Ser el equipo referente en planificación logística inteligente, habilitando una red de distribución predictiva, eficiente y escalable que posicione a Blue Express como líder en última milla en Chile.',
   },
   equipo: [
-    { id: 'eq_001', nombre: 'Javiera León',    rol: 'PO',                    iniciales: 'JL', activo: true },
-    { id: 'eq_002', nombre: 'Ricardo Moscoso', rol: 'IM',                    iniciales: 'RM', activo: true },
-    { id: 'eq_003', nombre: 'Carlos Gallardo', rol: 'TL',                    iniciales: 'CG', activo: true },
-    { id: 'eq_004', nombre: 'Leslye Rojas',    rol: 'Front',                 iniciales: 'LR', activo: true },
-    { id: 'eq_005', nombre: 'Hector Matcovich',rol: 'Front',                 iniciales: 'HM', activo: true },
-    { id: 'eq_006', nombre: 'Sara Vega',       rol: 'Full Stack',            iniciales: 'SV', activo: true },
-    { id: 'eq_007', nombre: 'Elias Sabja',     rol: 'Full Stack',            iniciales: 'ES', activo: true },
-    { id: 'eq_008', nombre: 'Fabian Sandoval', rol: 'Full Stack',            iniciales: 'FS', activo: true },
-    { id: 'eq_009', nombre: 'Denis Miranda',   rol: 'Full Stack',            iniciales: 'DM', activo: true },
+    { id: 'eq_001', nombre: 'Javiera León',    rol: 'Product Owner',         iniciales: 'JL', activo: true },
+    { id: 'eq_002', nombre: 'Ricardo Moscoso', rol: 'Iteration Manager',     iniciales: 'RM', activo: true },
+    { id: 'eq_003', nombre: 'Carlos Gallardo', rol: 'Full Stack',            iniciales: 'CG', activo: true },
+    { id: 'eq_004', nombre: 'Leslye Rojas',    rol: 'Front End',   iniciales: 'LR', activo: true },
+    { id: 'eq_005', nombre: 'Hector Matcovich',rol: 'Front End',   iniciales: 'HM', activo: true },
+    { id: 'eq_006', nombre: 'Sara Vega',       rol: 'Full Stack',  iniciales: 'SV', activo: true },
+    { id: 'eq_007', nombre: 'Elias Sabja',     rol: 'Full Stack',  iniciales: 'ES', activo: true },
+    { id: 'eq_008', nombre: 'Fabian Sandoval', rol: 'Backend',     iniciales: 'FS', activo: true },
+    { id: 'eq_009', nombre: 'Denis Miranda',   rol: 'Full Stack',  iniciales: 'DM', activo: true },
     { id: 'eq_010', nombre: 'Rodrigo Hurtado', rol: 'Full Stack',            iniciales: 'RH', activo: true },
   ],
   capacidades: [
@@ -251,6 +252,7 @@ export class MockRepository implements IDataRepository {
     if (data.capacitaciones) {
       data.capacitaciones  = data.capacitaciones.map(c => ({ ...c, equipoId: defaultEquipoId }));
     }
+    data.presentaciones = getPresentaciones();
     return data;
   }
 

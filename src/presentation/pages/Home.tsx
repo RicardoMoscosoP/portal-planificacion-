@@ -1,5 +1,5 @@
 import type { AppData, Capacidad } from '../../domain/types';
-import { MosSection } from '../components/RoadmapMosBlock';
+import { MosSection, IniciativasSection } from '../components/RoadmapMosBlock';
 import React from "react";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -9,44 +9,6 @@ function SecHdr({ label }: { label: string }) {
     <div className="sec-hdr">
       <span className="sec-ttl">{label}</span>
       <span className="sec-line" />
-    </div>
-  );
-}
-
-// ── Quick Stats Card ────────────────────────────────────────────────────────
-
-function QuickStatCard({ label, value, sublabel, color }: { label: string; value: string | number; sublabel?: string; color: string }) {
-  return (
-    <div style={{
-      background: '#fff',
-      border: '1px solid var(--border)',
-      borderRadius: 14,
-      padding: '18px 20px',
-      position: 'relative',
-      overflow: 'hidden',
-      minWidth: 140,
-      flex: '1 1 140px',
-    }}>
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 4,
-        background: color,
-        borderRadius: '14px 0 0 14px',
-      }} />
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#6B7A9F', marginBottom: 6 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: color, lineHeight: 1, marginBottom: 4 }}>
-        {value}
-      </div>
-      {sublabel && (
-        <div style={{ fontSize: 11, color: '#6B7A9F', fontWeight: 500 }}>
-          {sublabel}
-        </div>
-      )}
     </div>
   );
 }
@@ -212,15 +174,6 @@ export default function Home({ data, q, onNavCapacidad, onNav }: Props) {
   const { capacidades, iniciativas, equipo, stakeholders, bets, mos } = data;
   const sortedCaps = [...capacidades].sort((a, b) => (a.orden ?? 99) - (b.orden ?? 99));
 
-  // Calculate stats
-  const totalIniciativas = iniciativas.filter(i => Number(i.q) === q).length;
-  const iniciativasDone = iniciativas.filter(i => Number(i.q) === q && i.tag === 'done').length;
-  const iniciativasWip = iniciativas.filter(i => Number(i.q) === q && i.tag === 'wip').length;
-  const progressPercent = totalIniciativas > 0 ? Math.round((iniciativasDone / totalIniciativas) * 100) : 0;
-
-  // Active BETs count for stat card
-  const activeBetsCount = bets.filter(bet => (bet.activo ?? true) && bet.q === `Q${q}`).length;
-
   const visibleStakeholders = [...stakeholders]
     .filter(stakeholder => stakeholder.activo && (stakeholder.q === 'ALL' || stakeholder.q === `Q${q}`))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
@@ -234,40 +187,17 @@ export default function Home({ data, q, onNavCapacidad, onNav }: Props) {
         <p className="page-subtitle">Estado actual del quarter, métricas clave y accesos rápidos a las secciones principales.</p>
       </div>
 
-      <div className="page-body inicio-body">
-        {/* Quick Stats */}
-        <SecHdr label="Estado del Quarter" />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 28 }}>
-          <QuickStatCard
-            label="Iniciativas"
-            value={totalIniciativas}
-            sublabel={`${iniciativasDone} done · ${iniciativasWip} en curso`}
-            color="#0032A0"
-          />
-          <QuickStatCard
-            label="En Progreso"
-            value={iniciativasWip}
-            sublabel={`en Q${q} sin completar`}
-            color="#2BB8D4"
-          />
-          <QuickStatCard
-            label="Avance Q"
-            value={totalIniciativas > 0 ? `${progressPercent}%` : 'Sin datos'}
-            sublabel={totalIniciativas > 0 ? `${iniciativasDone} de ${totalIniciativas} marcadas done` : `No hay iniciativas en Q${q}`}
-            color={progressPercent >= 70 ? '#059669' : progressPercent >= 40 ? '#D97706' : '#DC2626'}
-          />
-          <QuickStatCard
-            label="BETs Activos"
-            value={activeBetsCount}
-            sublabel={`bets activos en Q${q}`}
-            color="#7C3AED"
-          />
-        </div>
-
+      <div className="page-body inicio-body" style={{ marginTop: 40 }}>
         {/* MOS / BETs — filtrado por Q activo */}
         <SecHdr label={`Métricas de Éxito (MOS) — Q${q}`} />
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 48 }}>
           <MosSection bets={bets} mos={mos} q={`Q${q}`} />
+        </div>
+
+        {/* Iniciativas del Quarter */}
+        <SecHdr label="Iniciativas del Quarter" />
+        <div style={{ marginBottom: 48 }}>
+          <IniciativasSection iniciativas={iniciativas} mos={mos} bets={bets} q={q} />
         </div>
 
         {/* Capacidades */}

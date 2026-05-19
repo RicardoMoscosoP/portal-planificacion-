@@ -32,6 +32,8 @@ interface Props {
   onQChange?: (q: number) => void;
   onReloadFromSheet: () => void;
   onBackToPortfolios?: () => void;
+  portafolioNombre?: string;
+  equipoNombre?: string;
   children: ReactNode;
 }
 
@@ -82,7 +84,7 @@ function getQuarterProgress(quarter: number, year: number): number {
   return Math.max(0, Math.min(100, Math.round((elapsedMs / totalMs) * 100)));
 }
 
-export default function MainLayout({ data, config, activePage, onNav, q, onQChange, onReloadFromSheet, onBackToPortfolios, children }: Props) {
+export default function MainLayout({ data, config, activePage, onNav, q, onQChange, onReloadFromSheet, onBackToPortfolios, portafolioNombre, equipoNombre, children }: Props) {
   const { hasPendingChanges } = useUnsavedChanges();
   const activeQuarter = q ?? normalizeQuarter(config.q_activo) ?? 1;
   const activeYear = resolveYear(config);
@@ -219,6 +221,13 @@ export default function MainLayout({ data, config, activePage, onNav, q, onQChan
             <div className="ph-grid">
               <div className="ph-main">
                 <div className="ph-title">{config.titulo}</div>
+                {(portafolioNombre || equipoNombre) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
+                    {portafolioNombre && <span><span style={{ opacity: 0.6, fontSize: 11 }}>Portafolio</span> <strong style={{ color: '#fff' }}>{portafolioNombre}</strong></span>}
+                    {portafolioNombre && equipoNombre && <span style={{ opacity: 0.4 }}>–</span>}
+                    {equipoNombre && <span><span style={{ opacity: 0.6, fontSize: 11 }}>Equipo</span> <strong style={{ color: '#fff' }}>{equipoNombre}</strong></span>}
+                  </div>
+                )}
                 <div className="ph-context-row">
                   <span className="ph-period">Q{activeQuarter} · {quarterMonths[0]}–{quarterMonths[2]} {activeYear}</span>
                   <span className="ph-period-sep">•</span>

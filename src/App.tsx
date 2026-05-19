@@ -24,12 +24,26 @@ import AdminPanel from './presentation/components/AdminPanel';
 import PresentacionesPage from './presentation/pages/Presentaciones';
 import fullMock from '../documentacion/mockDataLocal.json';
 
+function LoadingScreen({ label }: { label: string }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', gap: 0 }}>
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{ animation: 'spin 0.9s linear infinite', marginBottom: 18 }}>
+        <circle cx="20" cy="20" r="16" stroke="#E2E8F0" strokeWidth="3" />
+        <path d="M20 4a16 16 0 0 1 16 16" stroke="#0032A0" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+      <p style={{ fontSize: 13, color: '#64748B', margin: 0, fontFamily: 'Manrope, sans-serif', fontWeight: 500 }}>{label}</p>
+    </div>
+  );
+}
+
 function App() {
   type NavigationLevel = 'portafolios' | 'equipos' | 'sitio' | 'config' | 'adminpanel';
 
   const [navLevel, setNavLevel] = useState<NavigationLevel>('portafolios');
   const [selectedPortafolioId] = useState<string | null>(null);
   const [selectedEquipoId, setSelectedEquipoId] = useState<string | null>(null);
+  const [selectedEquipoNombre, setSelectedEquipoNombre] = useState<string | undefined>(undefined);
+  const [selectedPortafolioNombre, setSelectedPortafolioNombre] = useState<string | undefined>(undefined);
   const [activePage, setActivePage] = useState<PageKey>('inicio');
   const [activeCapacidadKey, setActiveCapacidadKey] = useState<string | null>(null);
   const [q, setQ] = useState<number | null>(null);
@@ -51,6 +65,17 @@ function App() {
     document.title = 'Área Tecnología - Blue Express';
   }, []);
 
+  // Refresco silencioso cuando el usuario vuelve a la pestaña.
+  // Cubre el caso: admin guarda algo → otro usuario regresa al sitio y ve los cambios.
+  useEffect(() => {
+    if (navLevel !== 'sitio' && navLevel !== 'config') return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') silentReload();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [navLevel, silentReload]);
+
   const navToCapacidad = (capacidadKey: string) => {
     // Scroll to top before navigating
     if (typeof window !== 'undefined') {
@@ -66,16 +91,7 @@ function App() {
     reload();
   };
 
-  if (authLoading) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0A1650', zIndex: 50 }}>
-        <div style={{ width: 192, height: 4, borderRadius: 9999, overflow: 'hidden', background: 'rgba(255,255,255,0.15)' }}>
-          <div style={{ height: '100%', borderRadius: 9999, background: '#2BB8D4', animation: 'load 1.4s ease forwards', width: '0%' }} />
-        </div>
-        <p style={{ fontSize: 12, marginTop: 16, color: 'rgba(255,255,255,0.4)' }}>Cargando usuario…</p>
-      </div>
-    );
-  }
+  if (authLoading) return <LoadingScreen label="Cargando usuario…" />;
   if (!user) {
     if (blocked) {
       return (
@@ -100,16 +116,7 @@ function App() {
     return <Login />;
   }
 
-  if (loading) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0A1650', zIndex: 50 }}>
-        <div style={{ width: 192, height: 4, borderRadius: 9999, overflow: 'hidden', background: 'rgba(255,255,255,0.15)' }}>
-          <div style={{ height: '100%', borderRadius: 9999, background: '#2BB8D4', animation: 'load 1.4s ease forwards', width: '0%' }} />
-        </div>
-        <p style={{ fontSize: 12, marginTop: 16, color: 'rgba(255,255,255,0.4)' }}>Cargando datos…</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingScreen label="Cargando datos…" />;
 
   // Mostrar aviso solo si NO hay error y NO hay datos (usuario aún no autorizó)
   if (!error && !data) {
@@ -171,16 +178,7 @@ function App() {
 
   // Pantalla de Portafolios (inicio)
   if (navLevel === 'portafolios') {
-    if (portfoliosLoading) {
-      return (
-        <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0A1650', zIndex: 50 }}>
-          <div style={{ width: 192, height: 4, borderRadius: 9999, overflow: 'hidden', background: 'rgba(255,255,255,0.15)' }}>
-            <div style={{ height: '100%', borderRadius: 9999, background: '#2BB8D4', animation: 'load 1.4s ease forwards', width: '0%' }} />
-          </div>
-          <p style={{ fontSize: 12, marginTop: 16, color: 'rgba(255,255,255,0.4)' }}>Cargando portafolios…</p>
-        </div>
-      );
-    }
+    if (portfoliosLoading) return <LoadingScreen label="Cargando portafolios…" />;
 
     if (!portfoliosData) return null;
 
@@ -256,6 +254,8 @@ function App() {
           portafolios={portfoliosData}
           onSelectEquipo={(equipo) => {
             setSelectedEquipoId(equipo.id);
+            setSelectedEquipoNombre(equipo.nombre);
+            setSelectedPortafolioNombre((equipo as any).portafolioNombre);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setNavLevel((equipo as any).config ? 'config' : 'sitio');
           }}
@@ -369,6 +369,8 @@ function App() {
           setActivePage('inicio');
           setNavLevel('portafolios');
         }}
+        portafolioNombre={selectedPortafolioNombre}
+        equipoNombre={selectedEquipoNombre}
       >
         {renderPage()}
       </MainLayout>

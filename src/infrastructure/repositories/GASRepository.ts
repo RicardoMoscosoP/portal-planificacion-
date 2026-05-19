@@ -90,6 +90,7 @@ export class GASRepository implements IDataRepository {
         reviews:        result.reviews       ?? [],
         salud:          result.salud         ?? [],
         capacitaciones: result.capacitaciones ?? [],
+        presentaciones: result.presentaciones ?? [],
       };
     } catch (e: any) {
       console.error('GASRepository.getAllData error:', e);

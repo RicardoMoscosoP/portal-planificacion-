@@ -19,7 +19,7 @@ import type { Equipo } from '../../domain/types';
 import StudioReviews from './StudioReviews';
 import fullMock from '../../../documentacion/mockDataLocal.json';
 
-type AdminSection = 'bienvenida' | 'config' | 'equipo' | 'capacidades' | 'stakeholders' | 'business-flows' | 'aplicaciones' | 'bets' | 'mos' | 'reviews' | 'presentaciones' | 'iniciativas' | 'entregables' | 'noticias' | 'capacitaciones' | 'usuarios' | 'seed';
+type AdminSection = 'bienvenida' | 'config' | 'equipo' | 'capacidades' | 'stakeholders' | 'business-flows' | 'aplicaciones' | 'bets' | 'mos' | 'reviews' | 'presentaciones' | 'iniciativas' | 'entregables' | 'noticias' | 'capacitaciones' | 'usuarios' | 'seed' | 'exportar';
 
 type AdminDialogHelpers = {
   showError: (message: string, title?: string) => void;
@@ -108,6 +108,7 @@ const ADMIN_MODAL_PANEL_STYLE: React.CSSProperties = {
 
 // ── Sección Config General ────────────────────────────────────────────────────
 function ConfigSection({ data, onSaved }: { data: AppData; onSaved: () => void }) {
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const [form, setForm] = useState<Config>({ ...data.config });
   const [saved, setSaved] = useState(false);
 
@@ -124,7 +125,7 @@ function ConfigSection({ data, onSaved }: { data: AppData; onSaved: () => void }
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    saveConfig(form);
+    saveConfig(form, equipoId);
     setSaved(true);
     onSaved();
     setTimeout(() => setSaved(false), 3000);
@@ -417,6 +418,37 @@ const ENT_ESTADO_STYLE: Record<string, { bg: string; color: string }> = {
   done:        { bg: '#dcfce7', color: '#166534' },
 };
 
+/** Formatea un ISO 8601 a "DD/MM/YYYY HH:mm" para mostrar en admin */
+function fmtAudit(iso: string | undefined): string {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const day   = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year  = d.getFullYear();
+    const hh    = String(d.getHours()).padStart(2, '0');
+    const mm    = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hh}:${mm}`;
+  } catch { return iso; }
+}
+
+/** Chip compacto de auditoría — solo visible en admin */
+function AuditMeta({ createdAt, updatedAt, createdBy, updatedBy }: {
+  createdAt?: string; updatedAt?: string; createdBy?: string; updatedBy?: string;
+}) {
+  if (!createdAt && !updatedAt) return null;
+  return (
+    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 8, marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: 11, color: '#94a3b8' }}>
+      {createdAt && (
+        <span>Creado: <strong style={{ color: '#64748b' }}>{fmtAudit(createdAt)}</strong>{createdBy ? ` · ${createdBy}` : ''}</span>
+      )}
+      {updatedAt && updatedAt !== createdAt && (
+        <span>Modificado: <strong style={{ color: '#64748b' }}>{fmtAudit(updatedAt)}</strong>{updatedBy ? ` · ${updatedBy}` : ''}</span>
+      )}
+    </div>
+  );
+}
+
 function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () => void; dialogs: AdminDialogHelpers }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Iniciativa> | null>(null);
@@ -425,6 +457,7 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
   const [entToast, setEntToast] = useState<string | null>(null);
 
   // Obtener todos los productos de Bets/LVT activos
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const allProducts = data.bets.filter(b => b.activo !== false).flatMap(b => b.productos && b.productos.length > 0 ? b.productos : [b.producto]);
   const qDefault = parseInt(data.config.q_activo?.replace('Q', '') ?? '2');
   const [q, setQ] = useState(qDefault);
@@ -436,6 +469,7 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
     label: '',
     descripcion: '',
     producto: '',
+    capacidadKeys: [],
   });
 
   // Solo sync desde el padre cuando se recibe data nueva (evitar sobreescribir cambios locales)
@@ -459,13 +493,13 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
   // saveIniLocal: guarda y actualiza el estado local. No recarga desde el padre.
   // Usar para operaciones de entregables (sin riesgo de race condition en GAS).
   const saveIniLocal = (ini: Iniciativa) => {
-    saveIniciativa(ini);
+    saveIniciativa(ini, equipoId);
     setIniciativas(prev => prev.map(i => i.id === ini.id ? ini : i));
   };
 
   // saveIni: guarda y notifica al padre (para cambios de iniciativa que requieren flush completo)
   const saveIni = (ini: Iniciativa) => {
-    saveIniciativa(ini);
+    saveIniciativa(ini, equipoId);
     setIniciativas(prev => prev.map(i => i.id === ini.id ? ini : i));
     // Marcar la ref actualizada para evitar que el useEffect posterior revierta el cambio
     prevDataRef.current = prevDataRef.current.map(i => i.id === ini.id ? ini : i);
@@ -499,6 +533,7 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
         activo: true,
         estado: form.estado ?? 'backlog',
         url: form.url?.trim() || undefined,
+        aplicacionId: form.aplicacionId || undefined,
       };
       saveIniLocal({ ...ini, entregables: [...(ini.entregables ?? []), item] });
       showEntToast('✓ Entregable agregado');
@@ -540,6 +575,10 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
       dialogs.showError('Nombre y producto son obligatorios.', 'Datos incompletos');
       return;
     }
+    if (!newForm.capacidadKeys?.length) {
+      dialogs.showError('Debes asociar al menos una capacidad.', 'Datos incompletos');
+      return;
+    }
     const ini: Iniciativa = {
       id: `ini_${Date.now()}`,
       nombre: newForm.nombre!.trim(),
@@ -551,13 +590,14 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
       q,
       bar: newForm.bar ?? { s: 0, e: 2, sp: 0, ep: 100 },
       label: newForm.label ?? '',
+      capacidadKeys: newForm.capacidadKeys ?? [],
       entregables: [],
     };
-    saveIniciativa(ini);
+    saveIniciativa(ini, equipoId);
     setIniciativas(prev => [...prev, ini]);
     onSaved();
     setAdding(false);
-    setNewForm({ q, tag: 'plan', emoji: '📌', bar: { s: 0, e: 2, sp: 0, ep: 100 }, label: '', descripcion: '', producto: '' });
+    setNewForm({ q, tag: 'plan', emoji: '📌', bar: { s: 0, e: 2, sp: 0, ep: 100 }, label: '', descripcion: '', producto: '', capacidadKeys: [] });
   };
 
   /* ── helpers UI ── */
@@ -616,6 +656,15 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                     <option value="backlog">Backlog</option>
                     <option value="in_progress">En progreso</option>
                     <option value="done">Done</option>
+                  </select>
+                </div>
+                <div style={{ gridColumn: '1/-1' }}>
+                  <div className="flbl">Aplicación (opcional)</div>
+                  <select className="fmi" value={entModal.form.aplicacionId ?? ''} onChange={e => setEnt({ aplicacionId: e.target.value || undefined })}>
+                    <option value="">Sin aplicación</option>
+                    {(data.aplicaciones ?? []).filter(a => a.activo !== false).map(a => (
+                      <option key={a.id} value={a.id}>{a.nombre}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
@@ -681,6 +730,20 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
               <div className="flbl">Detalle iniciativa</div>
               <textarea className="fmi" value={newForm.descripcion ?? ''} onChange={e => setNewForm(p => ({ ...p, descripcion: e.target.value }))} placeholder="Descripción para el popup del roadmap" rows={3} style={{ resize: 'vertical' }} />
             </div>
+            <div style={{ gridColumn: '1/-1' }}>
+              <div className="flbl">Capacidades * <span style={{ fontWeight: 400, color: '#94A3B8' }}>(selecciona al menos una)</span></div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                {(data.capacidades ?? []).map(cap => {
+                  const sel = (newForm.capacidadKeys ?? []).includes(cap.key);
+                  return (
+                    <label key={cap.key} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 8, border: `1.5px solid ${sel ? cap.color : '#E2E8F0'}`, background: sel ? cap.color + '18' : '#F8FAFC', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: sel ? cap.color : '#64748B', transition: 'all 0.15s' }}>
+                      <input type="checkbox" checked={sel} style={{ accentColor: cap.color }} onChange={() => setNewForm(p => { const prev = p.capacidadKeys ?? []; return { ...p, capacidadKeys: sel ? prev.filter(k => k !== cap.key) : [...prev, cap.key] }; })} />
+                      {cap.label}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
             <div style={{ gridColumn: 'span 2' }}>
               <div className="flbl">Label barra</div>
               <input className="fmi" value={newForm.label ?? ''} onChange={e => setNewForm(p => ({ ...p, label: e.target.value }))} placeholder="Texto corto" />
@@ -736,7 +799,13 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                       <span style={{ fontSize: 11, fontWeight: 700, color: bc }}>{ep}%</span>
                     </div>
                   ); })()}
-                  {/* Línea 3: fecha · label · entregables */}
+                  {/* Línea 3: capacidades */}
+                  {(ini.capacidadKeys ?? []).length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 5 }}>
+                      {(ini.capacidadKeys ?? []).map(key => { const cap = (data.capacidades ?? []).find(c => c.key === key); return cap ? <span key={key} style={{ fontSize: 10, fontWeight: 700, color: cap.color, background: cap.color + '18', borderRadius: 5, padding: '1px 7px', border: `1px solid ${cap.color}35` }}>{cap.label}</span> : null; })}
+                    </div>
+                  )}
+                  {/* Línea 4: fecha · label · entregables */}
                   <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
                     {(() => { const months = Q_MONTHS[q] ?? []; const startM = months[ini.bar?.s ?? 0] ?? ''; const endM = months[ini.bar?.e ?? 2] ?? ''; const fechaStr = startM && endM ? `${startM}\u2013${endM}` : ini.fechas; const labelStr = ini.label?.trim() ? `(${ini.label.trim()})` : ''; return [fechaStr, labelStr, `${ents.length} entregable${ents.length !== 1 ? 's' : ''}`].filter(Boolean).join(' · '); })()}
                   </div>
@@ -750,7 +819,7 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                     style={{ padding: '4px 10px', border: '1px solid #e2e8f0', borderRadius: 8, background: '#f8fafc', color: ini.activo === false ? '#059669' : '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                     {ini.activo === false ? 'Activar' : 'Desactivar'}
                   </button>
-                  <button onClick={e => { e.stopPropagation(); dialogs.showConfirm('¿Eliminar esta iniciativa?', () => { deleteIniciativa(ini.id); setIniciativas(prev => prev.filter(i => i.id !== ini.id)); onSaved(); }, { confirmLabel: 'Eliminar' }); }}
+                  <button onClick={e => { e.stopPropagation(); dialogs.showConfirm('¿Eliminar esta iniciativa?', () => { deleteIniciativa(ini.id, equipoId); setIniciativas(prev => prev.filter(i => i.id !== ini.id)); onSaved(); }, { confirmLabel: 'Eliminar' }); }}
                     style={{ padding: '4px 10px', border: '1px solid #fecaca', borderRadius: 8, background: '#fef2f2', color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                     Eliminar
                   </button>
@@ -762,8 +831,9 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                 <form onSubmit={e => {
                   e.preventDefault();
                   if (!editForm?.nombre?.trim() || !editForm?.producto) { dialogs.showError('Nombre y producto son obligatorios.', 'Datos incompletos'); return; }
-                  const updated: Iniciativa = { ...ini, ...editForm, nombre: editForm.nombre!.trim(), producto: editForm.producto!, descripcion: editForm.descripcion ?? '', fechas: editForm.fechas ?? '', tag: editForm.tag ?? 'plan', emoji: editForm.emoji ?? '📌', label: editForm.label ?? '', bar: editForm.bar ?? ini.bar, entregables: ini.entregables };
-                  saveIniciativa(updated);
+                  if (!editForm?.capacidadKeys?.length) { dialogs.showError('Debes asociar al menos una capacidad.', 'Datos incompletos'); return; }
+                  const updated: Iniciativa = { ...ini, ...editForm, nombre: editForm.nombre!.trim(), producto: editForm.producto!, descripcion: editForm.descripcion ?? '', fechas: editForm.fechas ?? '', tag: editForm.tag ?? 'plan', emoji: editForm.emoji ?? '📌', label: editForm.label ?? '', bar: editForm.bar ?? ini.bar, capacidadKeys: editForm.capacidadKeys ?? [], entregables: ini.entregables };
+                  saveIniciativa(updated, equipoId);
                   setIniciativas(prev => prev.map(i => i.id === ini.id ? updated : i));
                   setEditingId(null); setEditForm(null); onSaved();
                 }} style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', background: '#fafbff' }}>
@@ -793,6 +863,20 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                       <div className="flbl">Detalle iniciativa</div>
                       <textarea className="fmi" value={editForm?.descripcion ?? ''} onChange={e => setEditForm(f => ({ ...f!, descripcion: e.target.value }))} rows={3} style={{ resize: 'vertical' }} />
                     </div>
+                    <div style={{ gridColumn: '1/-1' }}>
+                      <div className="flbl">Capacidades * <span style={{ fontWeight: 400, color: '#94A3B8' }}>(selecciona al menos una)</span></div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                        {(data.capacidades ?? []).map(cap => {
+                          const sel = (editForm?.capacidadKeys ?? []).includes(cap.key);
+                          return (
+                            <label key={cap.key} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 8, border: `1.5px solid ${sel ? cap.color : '#E2E8F0'}`, background: sel ? cap.color + '18' : '#F8FAFC', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: sel ? cap.color : '#64748B', transition: 'all 0.15s' }}>
+                              <input type="checkbox" checked={sel} style={{ accentColor: cap.color }} onChange={() => setEditForm(f => { if (!f) return f; const prev = f.capacidadKeys ?? []; return { ...f, capacidadKeys: sel ? prev.filter(k => k !== cap.key) : [...prev, cap.key] }; })} />
+                              {cap.label}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <div style={{ gridColumn: 'span 2' }}>
                       <div className="flbl">Label barra</div>
                       <input className="fmi" value={editForm?.label ?? ''} onChange={e => setEditForm(f => ({ ...f!, label: e.target.value }))} />
@@ -810,6 +894,7 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                       </select>
                     </div>
                   </div>
+                  <AuditMeta createdAt={ini.createdAt} updatedAt={ini.updatedAt} createdBy={ini.createdBy} updatedBy={ini.updatedBy} />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                     <button type="button" onClick={() => { setEditingId(null); setEditForm(null); }} style={{ padding: '8px 16px', border: '1px solid #d1d5db', borderRadius: 8, background: '#f9fafb', fontSize: 14, cursor: 'pointer', color: '#374151' }}>Cancelar</button>
                     <button type="submit" className="btn-save">Guardar</button>
@@ -837,6 +922,7 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                             <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>Inicio</th>
                             <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>Término</th>
                             <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>Label</th>
+                            <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>App</th>
                             <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>Estado</th>
                             <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>URL</th>
                             <th style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 600, color: '#475569' }}></th>
@@ -854,6 +940,9 @@ function IniciativasSection({ data, onSaved, dialogs }: { data: AppData; onSaved
                                 <td style={{ padding: '8px 10px', whiteSpace: 'nowrap', color: '#475569' }}>{ent.fechaInicio}</td>
                                 <td style={{ padding: '8px 10px', whiteSpace: 'nowrap', color: '#475569' }}>{ent.fechaFin}</td>
                                 <td style={{ padding: '8px 10px', color: '#475569' }}>{ent.label || '—'}</td>
+                                <td style={{ padding: '8px 10px' }}>
+                                  {(() => { const app = (data.aplicaciones ?? []).find(a => a.id === ent.aplicacionId); return app ? <span style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', background: '#EEF2FF', borderRadius: 5, padding: '2px 8px', border: '1px solid #C7D7FE' }}>{app.nombre}</span> : <span style={{ color: '#cbd5e1' }}>—</span>; })()}
+                                </td>
                                 <td style={{ padding: '8px 10px' }}>
                                   <select value={ent.estado ?? 'backlog'} onChange={e => changeEntregableEstado(ini, ent.id, e.target.value as EntregableItem['estado'])}
                                     style={{ background: es.bg, color: es.color, border: 'none', borderRadius: 6, padding: '3px 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -960,6 +1049,7 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
     for (const m of data.mos) init[m.id] = { linea_base: m.linea_base ?? '', meta: m.meta ?? '', actual: m.actual ?? '' };
     return init;
   });
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const [savedBetId, setSavedBetId] = useState<string | null>(null);
 
   const betsQ = localBets.filter(b => b.q === selectedQ).sort((a, b) => a.orden - b.orden);
@@ -1015,8 +1105,8 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
       aplicacionId: form.aplicacionId || undefined,
       mos_ids: newMosIds, mos_inactivos: [], orden: betsQ.length + 1, activo: true,
     };
-    saveBet(newBet);
-    newMosItems.forEach(m => saveMOS(m));
+    saveBet(newBet, equipoId);
+    newMosItems.forEach(m => saveMOS(m, equipoId));
     setLocalBets(prev => [...prev, newBet]);
     setLocalMos(prev => [...prev, ...newMosItems]);
     setMosSelections(prev => ({ ...prev, [newBet.id]: new Set(newBet.mos_ids) }));
@@ -1038,7 +1128,7 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
 
   const handleDeleteBet = (bet: Bet) => {
     dialogs.showConfirm(`¿Eliminar Bet "${bet.descripcion.slice(0, 40)}…"?`, () => {
-      deleteBet(bet.id);
+      deleteBet(bet.id, equipoId);
       setLocalBets(prev => prev.filter(b => b.id !== bet.id));
       onSaved();
     }, { title: 'Eliminar Bet', confirmLabel: 'Eliminar' });
@@ -1095,9 +1185,9 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
       mos_inactivos: (bet.mos_inactivos ?? []).filter(id => updatedMos.some(m => m.id === id)),
     };
 
-    saveBet(updatedBet);
-    updatedMos.forEach(m => saveMOS(m));
-    removedMosIds.forEach(id => deleteMOS(id));
+    saveBet(updatedBet, equipoId);
+    updatedMos.forEach(m => saveMOS(m, equipoId));
+    removedMosIds.forEach(id => deleteMOS(id, equipoId));
 
     setLocalBets(prev => prev.map(item => item.id === bet.id ? updatedBet : item));
     setLocalMos(prev => {
@@ -1137,7 +1227,7 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
     const updated = localBets.map(b => b.id === betId ? { ...b, activo: b.activo === false ? true : false } : b);
     setLocalBets(updated);
     const bet = updated.find(b => b.id === betId)!;
-    saveBet(bet);
+    saveBet(bet, equipoId);
   };
 
   // MOS tab: toggle selection
@@ -1162,7 +1252,7 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
     const inactivos = bet.mos_ids.filter(id => !activos.has(id));
     const updated = { ...bet, mos_inactivos: inactivos };
     setLocalBets(prev => prev.map(b => b.id === bet.id ? updated : b));
-    saveBet(updated);
+    saveBet(updated, equipoId);
     const updatedMos = mosBet.map(m => {
       const f = mosFields[m.id];
       const quarters = [...(mosQuarterSelections[m.id] ?? new Set<string>())].sort((a, b) => QS.indexOf(a) - QS.indexOf(b));
@@ -1177,7 +1267,7 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
     });
     setLocalMos(prev => prev.map(m => updatedMos.find(item => item.id === m.id) ?? m));
     for (const item of updatedMos) {
-      saveMOS(item);
+      saveMOS(item, equipoId);
     }
     setSavedBetId(bet.id);
     onSaved();
@@ -1455,6 +1545,7 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
                               Cancelar
                             </button>
                           </div>
+                          <AuditMeta createdAt={bet.createdAt} updatedAt={bet.updatedAt} createdBy={bet.createdBy} updatedBy={bet.updatedBy} />
                         </div>
                       )}
                     </div>
@@ -1598,6 +1689,11 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
                                       placeholder="—" style={{ ...inputStyle }} />
                                   </div>
                                 </div>
+                                {(m.createdAt || m.updatedAt) && (
+                                  <div style={{ fontSize: 10, color: '#94a3b8', paddingTop: 4 }}>
+                                    {m.createdAt && `Creado: ${fmtAudit(m.createdAt)}`}{m.updatedAt && m.updatedAt !== m.createdAt && ` · Mod: ${fmtAudit(m.updatedAt)}`}{m.createdBy && ` — ${m.createdBy}`}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
@@ -1626,14 +1722,13 @@ function BetsSection({ data, onSaved, dialogs, mode }: { data: AppData; onSaved:
 
 // ── Sección Equipo ───────────────────────────────────────────────────────────
 const ROL_CLR: Record<string, string> = {
-  'Tech Leader': '#0032A0', 'Iteration Manager': '#7C3AED', 'Product Owner': '#2563EB',
-  'Desarrollador Backend': '#059669', 'Desarrollador Full': '#0891B2',
-  'Datos / Analytics': '#DB2777', Dev: '#374151',
+  'Product Owner': '#2563EB', 'Iteration Manager': '#7C3AED', 'Tech Leader': '#0032A0',
+  'Front End': '#EA580C', 'Full Stack': '#0891B2', 'Backend': '#059669',
 };
-const ROL_OPTIONS = ['Dev', 'Tech Leader', 'Product Owner', 'Iteration Manager', 'Desarrollador Backend', 'Desarrollador Full', 'Datos / Analytics', 'QA', 'Diseño', 'Otro'];
+const ROL_OPTIONS = ['Product Owner', 'Iteration Manager', 'Tech Leader', 'Front End', 'Full Stack', 'Backend'];
 
 type MemberForm = { nombre: string; rol: string; iniciales: string; foto_url: string; activo: boolean };
-const emptyMemberForm = (): MemberForm => ({ nombre: '', rol: 'Dev', iniciales: '', foto_url: '', activo: true });
+const emptyMemberForm = (): MemberForm => ({ nombre: '', rol: 'Full Stack', iniciales: '', foto_url: '', activo: true });
 
 
 
@@ -1643,6 +1738,7 @@ function EquipoSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () 
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState<MemberForm>(emptyMemberForm());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<MemberForm>(emptyMemberForm());
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -1661,7 +1757,7 @@ function EquipoSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () 
     setErrors(e);
     if (Object.keys(e).length) return;
     const newMember: TeamMember = { id: `eq_${Date.now()}`, nombre: form.nombre.trim(), rol: form.rol, iniciales: form.iniciales.trim().toUpperCase(), foto_url: form.foto_url.trim() || undefined, activo: form.activo };
-    saveTeamMember(newMember);
+    saveTeamMember(newMember, equipoId);
     setLocalMembers(prev => [...prev, newMember]);
     setForm(emptyMemberForm());
     setErrors({});
@@ -1678,7 +1774,7 @@ function EquipoSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () 
     const e = validate(editForm);
     if (Object.keys(e).length) return;
     const updated: TeamMember = { id, nombre: editForm.nombre.trim(), rol: editForm.rol, iniciales: editForm.iniciales.trim().toUpperCase(), foto_url: editForm.foto_url.trim() || undefined, activo: editForm.activo };
-    saveTeamMember(updated);
+    saveTeamMember(updated, equipoId);
     setLocalMembers(prev => prev.map(m => m.id === id ? updated : m));
     setSavedId(id);
     setEditId(null);
@@ -1688,7 +1784,7 @@ function EquipoSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () 
 
   const handleDelete = (m: TeamMember) => {
     dialogs.showConfirm(`¿Eliminar a "${m.nombre}" del equipo?`, () => {
-      deleteTeamMember(m.id);
+      deleteTeamMember(m.id, equipoId);
       setLocalMembers(prev => prev.filter(x => x.id !== m.id));
       onSaved();
     }, { title: 'Eliminar integrante', confirmLabel: 'Eliminar' });
@@ -1698,7 +1794,7 @@ function EquipoSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () 
     const updated = localMembers.map(m => m.id === id ? { ...m, activo: !m.activo } : m);
     setLocalMembers(updated);
     const m = updated.find(x => x.id === id)!;
-    saveTeamMember(m);
+    saveTeamMember(m, equipoId);
   };
 
   const MemberAvatar = ({ m, size = 40 }: { m: TeamMember; size?: number }) => {
@@ -1813,6 +1909,7 @@ function EquipoSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () 
                     onCancel: () => { setEditId(null); setErrors({}); },
                     okLabel: 'Guardar',
                   })}
+                  <AuditMeta createdAt={m.createdAt} updatedAt={m.updatedAt} createdBy={m.createdBy} updatedBy={m.updatedBy} />
                 </div>
               )}
             </div>
@@ -1857,8 +1954,10 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
   const [editingCapacidadKey, setEditingCapacidadKey] = useState<string | null>(null);
   const [editCapacidadForm, setEditCapacidadForm] = useState<CapacidadForm>(emptyCapacidadForm());
 
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
+
   const persist = (caps: Capacidad[]) => {
-    saveCapacidades(caps);
+    saveCapacidades(caps, equipoId);
     setLocalCaps(caps);
     onSaved();
   };
@@ -1911,7 +2010,7 @@ function CapacidadesSection({ data, onSaved, dialogs }: { data: AppData; onSaved
         const updated = prev.map(c =>
           c.key === capKey ? { ...c, alcances: (c.alcances ?? []).filter(a => a.key !== alcanceKey) } : c
         );
-        saveCapacidades(updated);
+        saveCapacidades(updated, equipoId);
         return updated;
       });
       onSaved();
@@ -2155,6 +2254,7 @@ function AplicacionesSection({ data, onSaved, dialogs }: { data: AppData; onSave
   const [editForm, setEditForm] = useState({ nombre: '', descripcion: '', capacidadKey: '' });
   const [releaseEditingId, setReleaseEditingId] = useState<string | null>(null);
   const emptyRelease = (): UltimoRelease => ({ version: '', fecha: '', estado: 'done', descripcion: '', changelog: [''] });
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const [releaseForm, setReleaseForm] = useState<UltimoRelease>(emptyRelease());
 
   const inputStyle: React.CSSProperties = { padding: '7px 11px', border: '1px solid var(--border)', borderRadius: 7, fontSize: 13, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' };
@@ -2166,7 +2266,7 @@ function AplicacionesSection({ data, onSaved, dialogs }: { data: AppData; onSave
     const newApp: Aplicacion = { id: `app_${Date.now()}`, nombre: form.nombre.trim(), descripcion: form.descripcion.trim(), capacidadKey: form.capacidadKey };
     const updated = [...apps, newApp];
     persist(updated);
-    saveAplicacion(newApp);
+    saveAplicacion(newApp, equipoId);
     setAdding(false);
     setForm({ nombre: '', descripcion: '', capacidadKey: '' });
     onSaved();
@@ -2176,7 +2276,7 @@ function AplicacionesSection({ data, onSaved, dialogs }: { data: AppData; onSave
     if (!editForm.nombre.trim() || !editForm.capacidadKey) return;
     const updated = apps.map(a => a.id === id ? { ...a, nombre: editForm.nombre.trim(), descripcion: editForm.descripcion.trim(), capacidadKey: editForm.capacidadKey } : a);
     persist(updated);
-    updated.filter(a => a.id === id).forEach(a => saveAplicacion(a));
+    updated.filter(a => a.id === id).forEach(a => saveAplicacion(a, equipoId));
     setEditingId(null);
     onSaved();
   };
@@ -2184,7 +2284,7 @@ function AplicacionesSection({ data, onSaved, dialogs }: { data: AppData; onSave
   const handleDelete = (id: string, nombre: string) => {
     dialogs.showConfirm(`¿Eliminar la aplicación "${nombre}"?`, () => {
       setApps(prev => prev.filter(a => a.id !== id));
-      deleteAplicacion(id);
+      deleteAplicacion(id, equipoId);
       onSaved();
     }, { title: 'Eliminar aplicación', confirmLabel: 'Eliminar' });
   };
@@ -2250,6 +2350,7 @@ function AplicacionesSection({ data, onSaved, dialogs }: { data: AppData; onSave
               {isEditing ? (
                 <div>
                   {FormFields({ f: editForm, setF: setEditForm })}
+                  <AuditMeta createdAt={app.createdAt} updatedAt={app.updatedAt} createdBy={app.createdBy} updatedBy={app.updatedBy} />
                   <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                     <button className="btn-save" style={{ fontSize: 12 }} onClick={() => handleSaveEdit(app.id)}>Guardar</button>
                     <button onClick={() => setEditingId(null)} className="btn-admin-alt" style={{ padding: '7px 12px', fontSize: 12 }}>Cancelar</button>
@@ -2342,7 +2443,7 @@ function AplicacionesSection({ data, onSaved, dialogs }: { data: AppData; onSave
                         <button className="btn-save" style={{ fontSize: 12 }} onClick={() => {
                           const updated = apps.map(a => a.id === app.id ? { ...a, ultimo_release: { ...releaseForm, changelog: releaseForm.changelog.filter(l => l.trim()) } } : a);
                           persist(updated);
-                          updated.filter(a => a.id === app.id).forEach(a => saveAplicacion(a));
+                          updated.filter(a => a.id === app.id).forEach(a => saveAplicacion(a, equipoId));
                           setReleaseEditingId(null);
                           onSaved();
                         }}>Guardar Release</button>
@@ -2391,6 +2492,7 @@ function StakeholdersSection({ data, onSaved, dialogs }: { data: AppData; onSave
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<StakeholderForm>(emptyStakeholderForm());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const [savedId, setSavedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -2450,7 +2552,7 @@ function StakeholdersSection({ data, onSaved, dialogs }: { data: AppData; onSave
 
     const stakeholder = toStakeholder(editingId ?? `stk_${Date.now()}`, form);
     persist(editingId ? stakeholders.map(item => item.id === editingId ? stakeholder : item) : [...stakeholders, stakeholder]);
-    saveStakeholder(stakeholder);
+    saveStakeholder(stakeholder, equipoId);
     closeEditor();
     onSaved();
     setSavedId(stakeholder.id);
@@ -2476,7 +2578,7 @@ function StakeholdersSection({ data, onSaved, dialogs }: { data: AppData; onSave
         const updated = prev.filter(item => item.id !== stakeholder.id);
         return [...updated].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
       });
-      deleteStakeholder(stakeholder.id);
+      deleteStakeholder(stakeholder.id, equipoId);
       onSaved();
     }, { title: 'Eliminar stakeholder', confirmLabel: 'Eliminar' });
   };
@@ -2484,7 +2586,7 @@ function StakeholdersSection({ data, onSaved, dialogs }: { data: AppData; onSave
   const handleToggleActivo = (stakeholder: Stakeholder) => {
     const updatedStakeholder = { ...stakeholder, activo: !stakeholder.activo };
     persist(stakeholders.map(item => item.id === stakeholder.id ? updatedStakeholder : item));
-    saveStakeholder(updatedStakeholder);
+    saveStakeholder(updatedStakeholder, equipoId);
     onSaved();
   };
 
@@ -2725,6 +2827,7 @@ function emptyCapacitacionForm(): CapacitacionForm {
 
 function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSaved: () => void; dialogs: AdminDialogHelpers }) {
   const [caps, setCaps] = useState<Capacitacion[]>(() => [...(data.capacitaciones ?? [])].sort((a, b) => (a.orden ?? 99) - (b.orden ?? 99)));
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -2737,7 +2840,7 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
   const persistOrdered = (next: Capacitacion[]) => {
     const ordered = next.map((c, i) => ({ ...c, orden: i + 1 }));
     persist(ordered);
-    ordered.forEach(c => saveCapacitacion(c));
+    ordered.forEach(c => saveCapacitacion(c, equipoId));
     onSaved();
   };
 
@@ -2767,7 +2870,7 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
     const current = editingId ? caps.find(c => c.id === editingId) : null;
     const next: Capacitacion = {
       id: editingId ?? `cap_${Date.now()}`,
-      equipoId: (data.config as any)?.equipoId ?? 'eq_planificacion',
+      equipoId,
       titulo: form.titulo.trim(),
       descripcion: form.descripcion.trim(),
       fecha: form.fecha.trim() || undefined,
@@ -2779,7 +2882,7 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
     };
     const updated = editingId ? caps.map(c => c.id === editingId ? next : c) : [...caps, next];
     persist(updated);
-    saveCapacitacion(next);
+    saveCapacitacion(next, equipoId);
     onSaved();
     closeEditor();
   };
@@ -2787,7 +2890,7 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
   const handleDelete = (cap: Capacitacion) => {
     dialogs.showConfirm(`¿Eliminar la capacitación "${cap.titulo}"?`, () => {
       setCaps(prev => [...prev].filter(c => c.id !== cap.id));
-      deleteCapacitacion(cap.id);
+      deleteCapacitacion(cap.id, equipoId);
       onSaved();
     }, { title: 'Eliminar capacitación', confirmLabel: 'Eliminar' });
   };
@@ -2795,7 +2898,7 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
   const handleToggle = (cap: Capacitacion) => {
     const updated = { ...cap, activo: !cap.activo };
     persist(caps.map(c => c.id === cap.id ? updated : c));
-    saveCapacitacion(updated);
+    saveCapacitacion(updated, equipoId);
     onSaved();
   };
 
@@ -2856,6 +2959,10 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
               <label htmlFor="cap-activo" style={{ fontSize: 13, color: '#374151' }}>Visible para los usuarios</label>
             </div>
           </div>
+          {editingId && (() => {
+            const cap = caps.find(c => c.id === editingId);
+            return cap ? <div style={{ padding: '0 22px 12px' }}><AuditMeta createdAt={cap.createdAt} updatedAt={cap.updatedAt} createdBy={cap.createdBy} updatedBy={cap.updatedBy} /></div> : null;
+          })()}
           <div style={{ padding: '0 22px 22px', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button type="button" onClick={closeEditor} style={{ padding: '9px 18px', borderRadius: 9, border: '1px solid var(--border)', background: '#F8FAFC', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cancelar</button>
             <button type="button" onClick={handleSave} style={{ padding: '9px 18px', borderRadius: 9, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Guardar</button>
@@ -2894,8 +3001,10 @@ function CapacitacionesSection({ data, onSaved, dialogs }: { data: AppData; onSa
               <span style={{ fontSize: 22, flexShrink: 0 }}>{cap.emoji || '📘'}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1C40', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cap.titulo}</div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                  {cap.fecha ?? ''}
+                <div style={{ fontSize: 12, color: '#64748B', marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: '0 10px' }}>
+                  {cap.fecha && <span>{cap.fecha}</span>}
+                  {cap.createdAt && <span style={{ fontSize: 11, color: '#94a3b8' }}>Creado: {fmtAudit(cap.createdAt)}{cap.createdBy ? ` · ${cap.createdBy}` : ''}</span>}
+                  {cap.updatedAt && cap.updatedAt !== cap.createdAt && <span style={{ fontSize: 11, color: '#94a3b8' }}>Modificado: {fmtAudit(cap.updatedAt)}</span>}
                 </div>
               </div>
               {cap.url && <span style={{ fontSize: 10, fontWeight: 700, color: '#059669', background: '#ECFDF5', borderRadius: 6, padding: '2px 7px', border: '1px solid #A7F3D0', flexShrink: 0 }}>URL ✓</span>}
@@ -2919,6 +3028,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const [form, setForm] = useState<BusinessFlowForm>(emptyBusinessFlowForm());
 
   const inputStyle: React.CSSProperties = { padding: '7px 11px', border: '1px solid var(--border)', borderRadius: 7, fontSize: 13, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' };
@@ -2930,7 +3040,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
   const persistOrdered = (nextFlows: BusinessFlow[]) => {
     const ordered = nextFlows.map((flow, index) => ({ ...flow, orden: index + 1 }));
     persist(ordered);
-    ordered.forEach(f => saveBusinessFlow(f));
+    ordered.forEach(f => saveBusinessFlow(f, equipoId));
     onSaved();
   };
 
@@ -2995,7 +3105,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
       : [...flows, nextFlow];
 
     persist(updated);
-    saveBusinessFlow(nextFlow);
+    saveBusinessFlow(nextFlow, equipoId);
     onSaved();
     closeEditor();
   };
@@ -3006,7 +3116,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
         const updated = prev.filter(item => item.id !== flow.id);
         return [...updated].sort((a, b) => (a.orden ?? 99) - (b.orden ?? 99));
       });
-      deleteBusinessFlow(flow.id);
+      deleteBusinessFlow(flow.id, equipoId);
       onSaved();
     }, { title: 'Eliminar flujo', confirmLabel: 'Eliminar' });
   };
@@ -3014,7 +3124,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
   const handleToggleActivo = (flow: BusinessFlow) => {
     const updatedFlow = { ...flow, activo: !flow.activo };
     persist(flows.map(item => item.id === flow.id ? updatedFlow : item));
-    saveBusinessFlow(updatedFlow);
+    saveBusinessFlow(updatedFlow, equipoId);
     onSaved();
   };
 
@@ -3084,6 +3194,7 @@ function BusinessFlowsSection({ data, onSaved, dialogs }: { data: AppData; onSav
             </div>
           </div>
 
+          {editingId && (() => { const bf = flows.find(f => f.id === editingId); return bf ? <div style={{ padding: '0 22px 10px' }}><AuditMeta createdAt={bf.createdAt} updatedAt={bf.updatedAt} createdBy={bf.createdBy} updatedBy={bf.updatedBy} /></div> : null; })()}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '0 22px 22px' }}>
             <button type="button" onClick={closeEditor} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid #CBD5E1', background: '#fff', color: '#475569', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>Cancelar</button>
             <button type="button" className="btn-save" onClick={handleSave}>{editingId ? 'Guardar cambios' : 'Guardar flujo'}</button>
@@ -3177,6 +3288,7 @@ export function ReviewsSection({ data, onSaved, dialogs }: { data: AppData; onSa
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingReview, setEditingReview] = useState<Review>(() => createEmptyReview(data.config.q_activo ?? 'Q2'));
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
+  const equipoId = (data.config as any).equipoId ?? 'eq_planificacion';
   const workspaceRef = useRef<ReviewWorkspaceHandle>(null);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -3254,7 +3366,7 @@ export function ReviewsSection({ data, onSaved, dialogs }: { data: AppData; onSa
       jiraPanelUrl,
     };
 
-    saveReview(nextReview);
+    saveReview(nextReview, equipoId);
     const updated = editingId
       ? reviews.map(review => review.id === editingId ? nextReview : review)
       : [...reviews, nextReview];
@@ -3265,7 +3377,7 @@ export function ReviewsSection({ data, onSaved, dialogs }: { data: AppData; onSa
 
   const handleDelete = (review: Review) => {
     dialogs.showConfirm(`¿Eliminar la review "${getReviewDisplayName(review)}"?`, () => {
-      deleteReview(review.id);
+      deleteReview(review.id, equipoId);
       setReviews(prev => prev.filter(item => item.id !== review.id));
       setSelectedReviewId(current => current === review.id ? null : current);
       onSaved();
@@ -3274,7 +3386,7 @@ export function ReviewsSection({ data, onSaved, dialogs }: { data: AppData; onSa
 
   const handleToggleActivo = (review: Review) => {
     const updatedReview: Review = { ...review, activo: !(review.activo !== false) };
-    saveReview(updatedReview);
+    saveReview(updatedReview, equipoId);
     setReviews(prev => sortReviews(prev.map(item => item.id === review.id ? updatedReview : item)));
     onSaved();
   };
@@ -3301,7 +3413,7 @@ export function ReviewsSection({ data, onSaved, dialogs }: { data: AppData; onSa
       riesgos: review.riesgos.map(item => ({ ...item })),
     };
 
-    saveReview(duplicatedReview);
+    saveReview(duplicatedReview, equipoId);
     setReviews(prev => sortReviews([...prev, duplicatedReview]));
     setSelectedReviewId(duplicatedReview.id);
     onSaved();
@@ -3468,6 +3580,194 @@ function NoEquipoPanel() {
 
 // ── Admin principal ───────────────────────────────────────────────────────────
 
+// ── ExportarColecciones ──────────────────────────────────────────────────────
+function triggerDownload(data: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function gasCall<T = any>(fnName: string, ...args: any[]): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const run = (window as any)?.google?.script?.run;
+    if (!run) { reject(new Error('google.script.run no disponible')); return; }
+    run
+      .withSuccessHandler(resolve)
+      .withFailureHandler((err: any) => reject(new Error(err?.message ?? 'Error GAS')))
+      [fnName](...args);
+  });
+}
+
+type ExportCard = {
+  id: string;
+  label: string;
+  desc: string;
+  icon: string;
+  color: string;
+};
+
+const EXPORT_CARDS: ExportCard[] = [
+  { id: 'portafolios', label: 'Portafolios',  desc: 'Colección portafolios con sus subequipos', icon: '🗂️', color: '#0033A0' },
+  { id: 'usuarios',   label: 'Usuarios',      desc: 'Colección usuarios (roles y accesos)',      icon: '👥', color: '#0F766E' },
+  { id: 'equipo',     label: 'Por equipo',    desc: 'Todas las subcolecciones de un equipo',     icon: '📦', color: '#7C3AED' },
+  { id: 'todo',       label: 'Exportar todo', desc: 'Todos los portafolios con sus equipos y subcolecciones', icon: '💾', color: '#92400E' },
+];
+
+function ExportarColecciones({ isGAS, portafolios: portafoliosProp = [] }: { isGAS: boolean; portafolios?: { id: string; nombre: string }[] }) {
+  const [loading, setLoading] = useState<string | null>(null);
+  const [msg, setMsg]         = useState<{ id: string; ok: boolean; text: string } | null>(null);
+  const [equipoSel, setEquipoSel] = useState<string>('');
+  const [portSel, setPortSel]     = useState<string>('');
+
+  // Cargar equipos y portafolios desde GAS al montar
+  const [equipos, setEquipos]         = useState<{ id: string; nombre: string }[]>([]);
+  const [portafolios, setPortafolios] = useState<{ id: string; nombre: string }[]>(portafoliosProp);
+
+  useEffect(() => {
+    if (!isGAS) return;
+    gasCall<any[]>('obtenerPortafolios')
+      .then(lista => {
+        const arr = Array.isArray(lista) ? lista : [];
+        setPortafolios(arr.map((p: any) => ({ id: p.id, nombre: p.nombre ?? p.id })));
+        const eqs: { id: string; nombre: string }[] = [];
+        arr.forEach((p: any) => {
+          (p.equipos || []).forEach((eq: any) => {
+            eqs.push({ id: eq.id, nombre: eq.nombre ?? eq.id });
+          });
+        });
+        setEquipos(eqs);
+      })
+      .catch(() => {});
+  }, [isGAS]);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const handle = async (cardId: string) => {
+    if (!isGAS) { setMsg({ id: cardId, ok: false, text: '⚠️ Solo disponible en GAS' }); return; }
+    setLoading(cardId);
+    setMsg(null);
+    try {
+      if (cardId === 'portafolios') {
+        const res = await gasCall<any[]>('obtenerPortafolios');
+        const lista = Array.isArray(res) ? res : [];
+        triggerDownload(lista, `bx-portafolios-${today}.json`);
+        setMsg({ id: cardId, ok: true, text: `✅ ${lista.length} portafolios descargados` });
+      } else if (cardId === 'usuarios') {
+        const res = await gasCall<string>('obtenerUsuarios');
+        const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+        if (!parsed.ok) throw new Error(parsed.error);
+        triggerDownload(parsed.usuarios, `bx-usuarios-${today}.json`);
+        setMsg({ id: cardId, ok: true, text: `✅ ${parsed.usuarios.length} usuarios descargados` });
+      } else if (cardId === 'equipo') {
+        if (!equipoSel) { setMsg({ id: cardId, ok: false, text: '⚠️ Selecciona un equipo' }); setLoading(null); return; }
+        const res = await gasCall<string>('obtenerDatosEquipo', equipoSel);
+        const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+        if (!parsed.ok) throw new Error(parsed.error);
+        triggerDownload(parsed, `bx-equipo-${equipoSel}-${today}.json`);
+        setMsg({ id: cardId, ok: true, text: `✅ Datos de ${equipoSel} descargados` });
+      } else if (cardId === 'todo') {
+        const res = await gasCall<string>('exportarDatos', portSel || null);
+        const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+        if (!parsed.ok) throw new Error(parsed.error);
+        const portNombre = portSel ? (portafolios.find(p => p.id === portSel)?.nombre ?? portSel) : 'todos';
+        triggerDownload(parsed, `bx-export-${portNombre}-${today}.json`);
+        setMsg({ id: cardId, ok: true, text: `✅ Export completo descargado` });
+      }
+    } catch (e) {
+      setMsg({ id: cardId, ok: false, text: `❌ ${(e as Error).message}` });
+    }
+    setLoading(null);
+  };
+
+  return (
+    <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: 24, marginTop: 4 }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: '#0F1C40', marginBottom: 4 }}>📥 Exportar colecciones</div>
+      <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6, marginBottom: 16 }}>
+        Descarga colecciones individuales de Firestore como JSON. Útil para respaldo o migración.
+      </p>
+      {!isGAS && (
+        <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 10, padding: '12px 16px', fontSize: 12, color: '#9A3412', fontWeight: 700, marginBottom: 16 }}>
+          ⚠️ Solo disponible en producción (GAS). En local no hay conexión a Firestore.
+        </div>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        {EXPORT_CARDS.map(card => (
+          <div key={card.id} style={{ border: '1px solid #E2E8F0', borderRadius: 12, padding: '16px 18px', background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 20 }}>{card.icon}</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F1C40' }}>{card.label}</div>
+                <div style={{ fontSize: 11, color: '#64748B' }}>{card.desc}</div>
+              </div>
+            </div>
+
+            {/* Selector equipo */}
+            {card.id === 'equipo' && (
+              <select
+                value={equipoSel}
+                onChange={e => setEquipoSel(e.target.value)}
+                style={{ padding: '7px 10px', borderRadius: 7, border: '1px solid #CBD5E1', fontSize: 12, color: '#0F1C40', background: '#F8FAFF' }}
+              >
+                <option value="">— Selecciona equipo —</option>
+                {equipos.map(eq => <option key={eq.id} value={eq.id}>{eq.nombre}</option>)}
+              </select>
+            )}
+
+            {/* Selector portafolio (export todo) */}
+            {card.id === 'todo' && (
+              <select
+                value={portSel}
+                onChange={e => setPortSel(e.target.value)}
+                style={{ padding: '7px 10px', borderRadius: 7, border: '1px solid #CBD5E1', fontSize: 12, color: '#0F1C40', background: '#F8FAFF' }}
+              >
+                <option value="">Todos los portafolios</option>
+                {portafolios.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              </select>
+            )}
+
+            <button
+              onClick={() => handle(card.id)}
+              disabled={loading === card.id || !isGAS}
+              style={{ padding: '9px 14px', borderRadius: 9, border: 'none', background: card.color, color: '#fff', fontSize: 12, fontWeight: 800, cursor: loading === card.id || !isGAS ? 'not-allowed' : 'pointer', opacity: loading === card.id || !isGAS ? 0.6 : 1, fontFamily: 'Manrope, sans-serif' }}
+            >
+              {loading === card.id ? '⏳ Descargando...' : '⬇ Descargar JSON'}
+            </button>
+
+            {msg?.id === card.id && (
+              <div style={{ fontSize: 11, fontWeight: 700, color: msg.ok ? '#065F46' : '#DC2626', background: msg.ok ? '#F0FDF4' : '#FEF2F2', borderRadius: 7, padding: '8px 10px' }}>
+                {msg.text}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── ExportarPage — sección standalone del sidebar ────────────────────────────
+function ExportarPage() {
+  const isGAS = typeof window !== 'undefined' && !!(window as any)?.google?.script;
+  return (
+    <div style={{ maxWidth: 780 }}>
+      <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0891B2', marginBottom: 4 }}>
+        Administración
+      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: '#0F1C40', marginBottom: 4 }}>Exportar colecciones</div>
+      <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6, marginBottom: 0 }}>
+        Descarga colecciones de Firestore como archivos JSON. Útil para respaldo o migración de datos.
+      </p>
+      <ExportarColecciones isGAS={isGAS} />
+    </div>
+  );
+}
+
 // ── SeedSection ──────────────────────────────────────────────────────────────
 function SeedSection() {
   const [loading, setLoading] = useState(false);
@@ -3475,10 +3775,7 @@ function SeedSection() {
   const [confirmed, setConfirmed] = useState(false);
 
   // Descarga JSON
-  const [exportLoading, setExportLoading] = useState(false);
-  const [exportMsg, setExportMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [portafolios, setPortafolios] = useState<{ id: string; nombre: string }[]>([]);
-  const [selectedPortId, setSelectedPortId] = useState<string>('');
 
   const isGAS = typeof window !== 'undefined' && !!(window as any)?.google?.script;
 
@@ -3530,42 +3827,6 @@ function SeedSection() {
         setConfirmed(false);
       })
       .seedCompleto(payload);
-  };
-
-  const handleExport = () => {
-    const run = (window as any)?.google?.script?.run;
-    if (!run) {
-      setExportMsg({ ok: false, text: '❌ Solo disponible en GAS' });
-      return;
-    }
-    setExportLoading(true);
-    setExportMsg(null);
-    run
-      .withSuccessHandler((res: any) => {
-        try {
-          const parsed = typeof res === 'string' ? JSON.parse(res) : res;
-          if (!parsed.ok) { setExportMsg({ ok: false, text: `❌ ${parsed.error}` }); setExportLoading(false); return; }
-          const blob = new Blob([JSON.stringify(parsed, null, 2)], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          const portNombre = selectedPortId ? (portafolios.find(p => p.id === selectedPortId)?.nombre ?? selectedPortId) : 'todos';
-          a.href = url;
-          a.download = `bx-export-${portNombre}-${new Date().toISOString().slice(0, 10)}.json`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          setExportMsg({ ok: true, text: `✅ Archivo descargado correctamente.` });
-        } catch (e) {
-          setExportMsg({ ok: false, text: `❌ Error al generar el archivo: ${(e as Error).message}` });
-        }
-        setExportLoading(false);
-      })
-      .withFailureHandler((err: any) => {
-        setExportMsg({ ok: false, text: `❌ ${err?.message ?? 'Error desconocido'}` });
-        setExportLoading(false);
-      })
-      .exportarDatos(selectedPortId || null);
   };
 
   const collections = [
@@ -3629,43 +3890,8 @@ function SeedSection() {
         )}
       </div>
 
-      {/* ── Descarga JSON ── */}
-      <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: 24, marginTop: 4 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#0F1C40', marginBottom: 6 }}>📥 Exportar datos</div>
-        <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6, marginBottom: 14 }}>
-          Descarga un JSON con todos los datos de Firestore (portafolios, equipos y sus colecciones).
-          Puedes exportar todos los portafolios o solo uno específico.
-        </p>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            value={selectedPortId}
-            onChange={e => setSelectedPortId(e.target.value)}
-            style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, color: '#0F1C40', background: '#fff', minWidth: 200 }}
-          >
-            <option value="">Todos los portafolios</option>
-            {portafolios.map(p => (
-              <option key={p.id} value={p.id}>{p.nombre}</option>
-            ))}
-          </select>
-          <button
-            onClick={handleExport}
-            disabled={exportLoading || !isGAS}
-            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#0F1C40', color: '#fff', fontSize: 13, fontWeight: 800, cursor: exportLoading || !isGAS ? 'not-allowed' : 'pointer', opacity: exportLoading || !isGAS ? 0.6 : 1, fontFamily: 'Manrope, sans-serif' }}
-          >
-            {exportLoading ? '⏳ Exportando...' : '📥 Descargar JSON'}
-          </button>
-        </div>
-        {!isGAS && (
-          <div style={{ marginTop: 10, fontSize: 12, color: '#9A3412', fontWeight: 600 }}>
-            ⚠️ Exportación solo disponible en GAS.
-          </div>
-        )}
-        {exportMsg && (
-          <div style={{ marginTop: 12, background: exportMsg.ok ? '#F0FDF4' : '#FEF2F2', border: `1px solid ${exportMsg.ok ? '#A7F3D0' : '#FECACA'}`, borderRadius: 10, padding: '12px 16px', fontSize: 13, fontWeight: 700, color: exportMsg.ok ? '#065F46' : '#DC2626' }}>
-            {exportMsg.text}
-          </div>
-        )}
-      </div>
+      {/* ── Exportar colecciones ── */}
+      <ExportarColecciones isGAS={isGAS} portafolios={portafolios} />
     </div>
   );
 }
@@ -3688,12 +3914,13 @@ const SECTIONS: Record<AdminSection | 'noticias' | 'capacitaciones', { label: st
   capacitaciones: { label: 'Capacitaciones', icon: '🎓' },
   'business-flows': { label: 'Flujos de negocio', icon: '🧭' },
   'usuarios': { label: 'Usuarios', icon: '🔐' },
+  'exportar': { label: 'Exportar datos', icon: '📥' },
 };
 
 // Grupos del sidebar
 const INDICADORES_SECTIONS: AdminSection[] = ['bets', 'mos', 'iniciativas', 'reviews', 'presentaciones'];
 const CONFIG_SECTIONS: AdminSection[] = ['config', 'equipo', 'capacidades', 'aplicaciones', 'stakeholders'];
-const OTROS_SECTIONS: AdminSection[] = ['business-flows', 'capacitaciones', 'usuarios'];
+const OTROS_SECTIONS: AdminSection[] = ['business-flows', 'capacitaciones', 'usuarios', 'exportar'];
 const SUPERADMIN_EMAIL = 'ricardo.moscoso@blue.cl';
 
 interface Props {
@@ -3765,12 +3992,15 @@ export default function Admin({ data, onNav, onDataRefresh, selectedEquipoId, eq
     <div className="page-shell admin-page admin-contenedor" style={{ minHeight: fullScreen ? '100vh' : 'calc(100vh - 80px)', width: '100%', background: 'var(--light)', borderRadius: fullScreen ? 0 : 16, overflow: 'hidden' }}>
       {/* Toast: guardando */}
       {saving && (
-        <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 9999, display: 'flex', alignItems: 'center', gap: 10, background: '#0F1C40', color: '#fff', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700, fontFamily: 'Manrope, sans-serif', boxShadow: '0 4px 20px rgba(0,0,0,0.25)', pointerEvents: 'none' }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: 'spin 0.8s linear infinite' }}>
-            <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" />
-            <path d="M8 2a6 6 0 0 1 6 6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
-          Guardando...
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,28,64,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 24, padding: '48px 64px', minWidth: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, boxShadow: '0 24px 64px rgba(0,0,0,0.18)', fontFamily: 'Manrope, sans-serif' }}>
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ animation: 'spin 0.85s linear infinite' }}>
+              <circle cx="24" cy="24" r="20" stroke="#E2E8F0" strokeWidth="4" />
+              <path d="M24 4a20 20 0 0 1 20 20" stroke="#0032A0" strokeWidth="4" strokeLinecap="round" />
+            </svg>
+            <span style={{ fontSize: 18, fontWeight: 700, color: '#0F1C40', letterSpacing: '-0.01em' }}>Guardando…</span>
+            <span style={{ fontSize: 13, color: '#94A3B8', fontWeight: 500 }}>Por favor espera</span>
+          </div>
         </div>
       )}
       {/* [admin-page] */}
@@ -3809,31 +4039,6 @@ export default function Admin({ data, onNav, onDataRefresh, selectedEquipoId, eq
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
 
-              {/* 📈 Indicadores */}
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0F766E', marginBottom: 4, fontFamily: 'Manrope, sans-serif' }}>
-                  📈 Indicadores
-                </div>
-                {!selectedEquipoId ? (
-                  <div style={{ fontSize: 11, color: '#94A3B8', padding: '4px 8px', fontStyle: 'italic', lineHeight: 1.5 }}>Selecciona un equipo.</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {INDICADORES_SECTIONS.map(item => {
-                      const meta = SECTIONS[item];
-                      const active = section === item;
-                      return (
-                        <button key={item} onClick={() => setSection(item)} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '5px 6px', borderRadius: 8, border: active ? '1px solid #99F6E4' : '1px solid transparent', background: active ? '#F0FDF4' : 'transparent', color: active ? '#0F766E' : '#334155', cursor: 'pointer', fontSize: 11, fontWeight: active ? 800 : 500, textAlign: 'left', fontFamily: 'Manrope, sans-serif' }}>
-                          <span style={{ fontSize: 12 }}>{meta.icon}</span>
-                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 168, marginLeft: 2 }}>{meta.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
-
               {/* ⚙️ Configuración */}
               <div>
                 <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7C3AED', marginBottom: 4, fontFamily: 'Manrope, sans-serif', lineHeight: 1.4 }}>
@@ -3848,6 +4053,31 @@ export default function Admin({ data, onNav, onDataRefresh, selectedEquipoId, eq
                       const active = section === item;
                       return (
                         <button key={item} onClick={() => setSection(item)} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '5px 6px', borderRadius: 8, border: active ? '1px solid #DDD6FE' : '1px solid transparent', background: active ? '#F5F3FF' : 'transparent', color: active ? '#7C3AED' : '#334155', cursor: 'pointer', fontSize: 11, fontWeight: active ? 800 : 500, textAlign: 'left', fontFamily: 'Manrope, sans-serif' }}>
+                          <span style={{ fontSize: 12 }}>{meta.icon}</span>
+                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 168, marginLeft: 2 }}>{meta.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
+
+              {/* 📈 Indicadores */}
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0F766E', marginBottom: 4, fontFamily: 'Manrope, sans-serif' }}>
+                  📈 Indicadores
+                </div>
+                {!selectedEquipoId ? (
+                  <div style={{ fontSize: 11, color: '#94A3B8', padding: '4px 8px', fontStyle: 'italic', lineHeight: 1.5 }}>Selecciona un equipo.</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {INDICADORES_SECTIONS.map(item => {
+                      const meta = SECTIONS[item];
+                      const active = section === item;
+                      return (
+                        <button key={item} onClick={() => setSection(item)} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '5px 6px', borderRadius: 8, border: active ? '1px solid #99F6E4' : '1px solid transparent', background: active ? '#F0FDF4' : 'transparent', color: active ? '#0F766E' : '#334155', cursor: 'pointer', fontSize: 11, fontWeight: active ? 800 : 500, textAlign: 'left', fontFamily: 'Manrope, sans-serif' }}>
                           <span style={{ fontSize: 12 }}>{meta.icon}</span>
                           <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 168, marginLeft: 2 }}>{meta.label}</span>
                         </button>
@@ -3942,6 +4172,7 @@ export default function Admin({ data, onNav, onDataRefresh, selectedEquipoId, eq
             {section === 'business-flows' && <BusinessFlowsSection data={data} onSaved={handleDataRefresh} dialogs={dialogHelpers} />}
             {section === 'usuarios'     && <UsuariosSection data={data} onSaved={handleDataRefresh} dialogs={dialogHelpers} />}
             {section === 'capacitaciones' && <CapacitacionesSection data={data} onSaved={handleDataRefresh} dialogs={dialogHelpers} />}
+            {section === 'exportar'     && <ExportarPage />}
             {section === 'seed' && <SeedSection />}
 
             {/* ── Secciones de Equipo (requieren selectedEquipoId) ── */}

@@ -87,15 +87,19 @@ function actualizarNombreUsuario(usuarioId, nombre) {
 //  crear / actualizar / eliminar / listar
 // ────────────────────────────────────────────────────────────
 
-// Colecciones permitidas para CRUD desde el Admin
+// Colecciones simples permitidas para CRUD desde el Admin
 var COLECCIONES_PERMITIDAS = [
   'config', 'equipo', 'capacidades', 'bets', 'mos',
   'iniciativas', 'entregables', 'alcances', 'aplicaciones',
-  'reviews', 'stakeholders', 'businessFlows', 'presentaciones'
+  'reviews', 'stakeholders', 'businessFlows'
 ];
 
 function _validarColeccion(coleccion) {
-  if (COLECCIONES_PERMITIDAS.indexOf(coleccion) === -1) {
+  // Permite colecciones raíz conocidas O rutas de sub-colección bajo un equipo
+  // Ej: 'equipos/eq_planificacion/presentaciones'
+  var esPermitida = COLECCIONES_PERMITIDAS.indexOf(coleccion) !== -1 ||
+                    /^equipos\/[^/]+\/[^/]+$/.test(coleccion);
+  if (!esPermitida) {
     throw new Error('Colección no permitida: ' + coleccion);
   }
 }

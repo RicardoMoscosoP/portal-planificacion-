@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "deploy": "tsc -b && vite build && xcopy /Y dist\\index.html ..\\site-equipo-planificacion-gas\\index.html && cd ..\\site-equipo-planificacion-gas && clasp push",
+    "deploy": "tsc -b && vite build && xcopy /Y dist\\index.html ..\\site-equipo-planificacion-gas\\index.html && xcopy /Y documentacion\\Código-apps-script.gs ..\\site-equipo-planificacion-gas\\Code.gs && cd ..\\site-equipo-planificacion-gas && clasp push",
     "lint": "eslint .",
     "preview": "vite preview",
     "mock:export": "npx tsx scripts/exportPayload.ts"

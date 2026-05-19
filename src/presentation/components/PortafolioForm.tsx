@@ -66,19 +66,22 @@ export default function PortafolioForm({ portafolio, onSave, onCancel }: Props) 
       onSave(portafolioActualizado);
     } else {
       const portafolioId = `port_${Date.now()}`;
+      const now = new Date().toISOString();
       const nuevoPortafolio: Portafolio = {
         id: portafolioId,
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
         activo: true,
-        creadoEn: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
         equipos: equiposFiltrados.map((e, idx) => ({
           id: `eq_${portafolioId}_${idx}`,
           nombre: e.nombre.trim(),
           descripcion: (e.descripcion ?? '').trim(),
           portafolioId,
           activo: true,
-          creadoEn: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         })),
       };
       onSave(nuevoPortafolio);

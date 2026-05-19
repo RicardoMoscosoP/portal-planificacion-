@@ -52,7 +52,24 @@ function guardarPortafolio(objeto) {
   var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, 'https://www.googleapis.com/auth/datastore');
   firestoreSet('portafolios', idDoc, portData, token);
   equipos.forEach(function(eq) {
-    firestoreSet('portafolios/' + idDoc + '/equipos', eq.id || ('eq_' + new Date().getTime()), eq, token);
+    var eqId = eq.id || ('eq_' + new Date().getTime());
+    // 1. Guardar metadata en portafolios/{portId}/equipos/{eqId}
+    firestoreSet('portafolios/' + idDoc + '/equipos', eqId, eq, token);
+    // 2. Inicializar árbol operativo del equipo si aún no existe
+    //    Solo crea config/main si el equipo es nuevo (no sobreescribe datos existentes)
+    var configExistente = firestoreGetDocT('equipos/' + eqId + '/config/main', token);
+    if (!configExistente) {
+      var configInicial = {
+        equipoId:            eqId,
+        portafolioId:        idDoc,
+        titulo:              eq.nombre || eq.id || 'Equipo sin nombre',
+        año:                 String(new Date().getFullYear()),
+        q_activo:            'Q1',
+        sprint_actual:       '1',
+        fecha_actualizacion: new Date().toLocaleDateString('es-CL'),
+      };
+      firestoreSet('equipos/' + eqId + '/config', 'main', configInicial, token);
+    }
   });
   return idDoc;
 }
@@ -302,6 +319,8 @@ function obtenerDatosEquipo(equipoId) {
     var reviews   = firestoreGetCollectionT(base + '/reviews', token);
     var salud     = firestoreGetCollectionT(base + '/salud', token);
     var capac     = firestoreGetCollectionT(base + '/capacitaciones', token);
+    // Presentaciones: sub-colección del equipo (mismo patrón que bets, mos, etc.)
+    var pres      = firestoreGetCollectionT(base + '/presentaciones', token);
 
     return JSON.stringify({
       ok: true,
@@ -316,7 +335,8 @@ function obtenerDatosEquipo(equipoId) {
       businessFlows: bflows,
       reviews:       reviews,
       salud:         salud,
-      capacitaciones: capac
+      capacitaciones: capac,
+      presentaciones: pres
     });
   } catch(e) {
     return JSON.stringify({ ok: false, error: e.toString() });

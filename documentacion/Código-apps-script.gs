@@ -25,11 +25,13 @@ function obtenerPortafolios() {
   var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, "https://www.googleapis.com/auth/datastore");
   var portafoliosList = firestoreGetCollectionT('portafolios', token);
 
-  return portafoliosList.map(function(port) {
-    // Leer subcolección equipos
+  var result = portafoliosList.map(function(port) {
     var equipos = firestoreGetCollectionT('portafolios/' + port.id + '/equipos', token);
-    return Object.assign({}, port, { equipos: equipos });
+    // Equipos ordenados por createdAt ASC: el primero creado aparece primero
+    return Object.assign({}, port, { equipos: _sortByCreatedAt(equipos).reverse() });
   });
+  // Portafolios ordenados por createdAt ASC: el primero creado aparece primero
+  return _sortByCreatedAt(result).reverse();
 }
 
 /**
@@ -49,10 +51,28 @@ function guardarPortafolio(objeto) {
     if (k !== 'equipos' && Object.prototype.hasOwnProperty.call(objeto, k)) portData[k] = objeto[k];
   }
   portData.activo = objeto.activo !== false;
+  // Inyectar campos de auditoría en el portafolio
+  portData = _enrichAudit(portData);
   var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, 'https://www.googleapis.com/auth/datastore');
   firestoreSet('portafolios', idDoc, portData, token);
   equipos.forEach(function(eq) {
-    firestoreSet('portafolios/' + idDoc + '/equipos', eq.id || ('eq_' + new Date().getTime()), eq, token);
+    var eqId = eq.id || ('eq_' + new Date().getTime());
+    // 1. Guardar metadata del equipo con campos de auditoría
+    firestoreSet('portafolios/' + idDoc + '/equipos', eqId, _enrichAudit(eq), token);
+    // 2. Inicializar árbol operativo del equipo si aún no existe
+    //    Solo crea config/main si el equipo es nuevo (no sobreescribe datos existentes)
+    var configExistente = firestoreGetDocT('equipos/' + eqId + '/config/main', token);
+    if (!configExistente) {
+      var configInicial = _enrichAudit({
+        equipoId:      eqId,
+        portafolioId:  idDoc,
+        titulo:        eq.nombre || eq.id || 'Equipo sin nombre',
+        año:           String(new Date().getFullYear()),
+        q_activo:      'Q1',
+        sprint_actual: '1',
+      });
+      firestoreSet('equipos/' + eqId + '/config', 'main', configInicial, token);
+    }
   });
   return idDoc;
 }
@@ -302,21 +322,25 @@ function obtenerDatosEquipo(equipoId) {
     var reviews   = firestoreGetCollectionT(base + '/reviews', token);
     var salud     = firestoreGetCollectionT(base + '/salud', token);
     var capac     = firestoreGetCollectionT(base + '/capacitaciones', token);
+    // Presentaciones: sub-colección del equipo (mismo patrón que bets, mos, etc.)
+    var pres      = firestoreGetCollectionT(base + '/presentaciones', token);
 
+    // Ordenar por createdAt DESC: los datos más recientes primero
     return JSON.stringify({
       ok: true,
-      config:        config,
-      equipo:        miembros,
-      capacidades:   caps,
-      aplicaciones:  apps,
-      bets:          bets,
-      mos:           mos,
-      iniciativas:   inic,
-      stakeholders:  stakes,
-      businessFlows: bflows,
-      reviews:       reviews,
-      salud:         salud,
-      capacitaciones: capac
+      config:         config,
+      equipo:         _sortByCreatedAt(miembros),
+      capacidades:    _sortByCreatedAt(caps),
+      aplicaciones:   _sortByCreatedAt(apps),
+      bets:           _sortByCreatedAt(bets),
+      mos:            _sortByCreatedAt(mos),
+      iniciativas:    _sortByCreatedAt(inic),
+      stakeholders:   _sortByCreatedAt(stakes),
+      businessFlows:  _sortByCreatedAt(bflows),
+      reviews:        _sortByCreatedAt(reviews),
+      salud:          _sortByCreatedAt(salud),
+      capacitaciones: _sortByCreatedAt(capac),
+      presentaciones: _sortByCreatedAt(pres),
     });
   } catch(e) {
     return JSON.stringify({ ok: false, error: e.toString() });
@@ -454,9 +478,60 @@ function seedCompleto(payload) {
   }
 }
 
+// ─── HELPERS DE AUDITORÍA Y ORDENAMIENTO ──────────────────────────────────────────────
+
+/** Retorna la fecha/hora actual en ISO 8601 (UTC). */
+function _nowISO() {
+  return new Date().toISOString();
+}
+
+/**
+ * Email del usuario activo. Funciona cuando el script se ejecuta con
+ * "Ejecutar como: Usuario que accede a la aplicación". Retorna '' si no disponible.
+ */
+function _currentUser() {
+  try { return Session.getActiveUser().getEmail() || ''; } catch(e) { return ''; }
+}
+
+/**
+ * Enriquece un objeto con campos de auditoría antes de guardarlo en Firestore.
+ * - createdAt : se asigna solo si el documento NO tenía valor previo (preserva el original).
+ * - updatedAt : siempre se sobreescribe con la hora actual de la escritura.
+ * - createdBy : se preserva si ya existía; si no, se asigna el usuario activo.
+ * - updatedBy : siempre se sobreescribe con el usuario activo.
+ */
+function _enrichAudit(data) {
+  var now  = _nowISO();
+  var user = _currentUser();
+  return Object.assign({}, data, {
+    createdAt: data.createdAt || now,
+    updatedAt: now,
+    createdBy: data.createdBy || user,
+    updatedBy: user || data.updatedBy || '',
+  });
+}
+
+/**
+ * Ordena un array de documentos Firestore por createdAt DESC (más reciente primero).
+ * Documentos sin createdAt quedan al final del listado.
+ * ISO 8601 permite comparación lexicográfica directa.
+ */
+function _sortByCreatedAt(arr) {
+  return arr.slice().sort(function(a, b) {
+    var aDate = a.createdAt || '';
+    var bDate = b.createdAt || '';
+    if (bDate > aDate) return 1;
+    if (bDate < aDate) return -1;
+    return 0;
+  });
+}
+
+// ───────────────────────────────────────────────────────────────────────────────────
+
 /**
  * Guarda un documento individual en una subcolección del equipo.
  * Llamado desde GASRepository para persistir cambios en Firestore.
+ * Inyecta automáticamente campos de auditoría: createdAt, updatedAt, createdBy, updatedBy.
  * @param {string} equipoId  - ID del equipo (ej: 'eq_planificacion')
  * @param {string} coleccion - Nombre de la subcolección (ej: 'miembros', 'bets', 'config')
  * @param {string} docId     - ID del documento (ej: 'eq_001', 'bet_q2_01', 'main')
@@ -467,7 +542,8 @@ function guardarDocumento(equipoId, coleccion, docId, data) {
   try {
     var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, 'https://www.googleapis.com/auth/datastore');
     var collPath = 'equipos/' + equipoId + '/' + coleccion;
-    firestoreSet(collPath, docId, Object.assign({}, data, { equipoId: equipoId }), token);
+    var enriched = _enrichAudit(Object.assign({}, data, { equipoId: equipoId }));
+    firestoreSet(collPath, docId, enriched, token);
     return JSON.stringify({ ok: true });
   } catch(e) {
     return JSON.stringify({ ok: false, error: e.toString() });
@@ -563,23 +639,169 @@ function exportarDatos(portafolioId) {
     } else {
       portafoliosList = firestoreGetCollectionT('portafolios', token);
     }
-    var COLECCIONES_EQUIPO = ['config', 'miembros', 'capacidades', 'stakeholders', 'aplicaciones', 'bets', 'iniciativas', 'capacitaciones', 'reviews', 'businessFlows', 'salud'];
+    // 12 subcolecciones del equipo (igual que obtenerDatosEquipo + backfill)
+    var COLECCIONES_EQUIPO = [
+      'config', 'miembros', 'capacidades', 'stakeholders', 'aplicaciones',
+      'bets', 'mos', 'iniciativas', 'capacitaciones', 'reviews',
+      'businessFlows', 'salud', 'presentaciones'
+    ];
     var result = portafoliosList.map(function(port) {
       var equipos = firestoreGetCollectionT('portafolios/' + port.id + '/equipos', token);
       var equiposConDatos = equipos.map(function(eq) {
         var datos = {};
         COLECCIONES_EQUIPO.forEach(function(col) {
           try {
-            var docs = firestoreGetCollectionT('equipos/' + eq.id + '/' + col, token);
-            if (docs && docs.length > 0) datos[col] = docs;
+            if (col === 'config') {
+              // config es un doc único, no colección
+              var cfg = firestoreGet('equipos/' + eq.id + '/config', 'main', token);
+              if (cfg) datos.config = cfg;
+            } else {
+              var docs = firestoreGetCollectionT('equipos/' + eq.id + '/' + col, token);
+              if (docs && docs.length > 0) datos[col] = docs;
+            }
           } catch(e) { /* coleccion vacia, ignorar */ }
         });
         return Object.assign({}, eq, { datos: datos });
       });
       return Object.assign({}, port, { equipos: equiposConDatos });
     });
-    return JSON.stringify({ ok: true, exportadoEn: new Date().toISOString(), portafolios: result });
+    var out = JSON.stringify({ ok: true, exportadoEn: new Date().toISOString(), portafolios: result });
+    var totalEquipos = result.reduce(function(acc, p) { return acc + (p.equipos ? p.equipos.length : 0); }, 0);
+    console.log('exportarDatos OK — portafolios:', result.length, '| equipos:', totalEquipos, '| bytes:', out.length);
+    return out;
+  } catch(e) {
+    console.log('exportarDatos ERROR:', e.toString());
+    return JSON.stringify({ ok: false, error: e.toString() });
+  }
+}
+
+/**
+ * EXPORTACIÓN POR EQUIPO — Descarga los datos de un equipo específico.
+ * Retorna JSON string { ok, exportadoEn, equipoId, datos: { config, miembros, ... } }
+ */
+function exportarEquipo(equipoId) {
+  try {
+    var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, 'https://www.googleapis.com/auth/datastore');
+    var COLECCIONES = [
+      'miembros', 'capacidades', 'aplicaciones', 'bets', 'mos',
+      'iniciativas', 'stakeholders', 'businessFlows', 'reviews',
+      'salud', 'capacitaciones', 'presentaciones'
+    ];
+    var datos = {};
+    try {
+      var cfg = firestoreGet('equipos/' + equipoId + '/config', 'main', token);
+      if (cfg) datos.config = cfg;
+    } catch(e) {}
+    COLECCIONES.forEach(function(col) {
+      try {
+        var docs = firestoreGetCollectionT('equipos/' + equipoId + '/' + col, token);
+        if (docs && docs.length > 0) datos[col] = docs;
+      } catch(e) {}
+    });
+    var out = JSON.stringify({ ok: true, exportadoEn: new Date().toISOString(), equipoId: equipoId, datos: datos });
+    console.log('exportarEquipo OK — equipoId:', equipoId, '| bytes:', out.length);
+    return out;
+  } catch(e) {
+    console.log('exportarEquipo ERROR:', e.toString());
+    return JSON.stringify({ ok: false, error: e.toString() });
+  }
+}
+
+/**
+ * LISTAR PORTAFOLIOS Y EQUIPOS — Retorna estructura liviana para el selector de exportación.
+ * Retorna JSON string { ok, portafolios: [{ id, nombre, equipos: [{ id, nombre }] }] }
+ */
+function listarPortafoliosEquipos() {
+  try {
+    var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, 'https://www.googleapis.com/auth/datastore');
+    var portafolios = firestoreGetCollectionT('portafolios', token);
+    var resultado = portafolios.map(function(port) {
+      var equipos = firestoreGetCollectionT('portafolios/' + port.id + '/equipos', token);
+      return {
+        id: port.id,
+        nombre: port.nombre || port.id,
+        equipos: equipos.map(function(eq) { return { id: eq.id, nombre: eq.nombre || eq.id }; })
+      };
+    });
+    return JSON.stringify({ ok: true, portafolios: resultado });
   } catch(e) {
     return JSON.stringify({ ok: false, error: e.toString() });
   }
 }
+
+/**
+ * BACKFILL — Agrega createdAt/updatedAt a documentos que no los tienen.
+ * Recorre portafolios, equipos y todas las subcolecciones del equipo.
+ * Solo toca documentos que NO tienen aún el campo createdAt (no sobreescribe).
+ * Ejecutar UNA SOLA VEZ desde el editor de Apps Script: backfillAuditFields()
+ * Retorna: JSON string { ok, actualizados, omitidos }
+ */
+function backfillAuditFields() {
+  try {
+    var token = ServiceAccountApp.getAccessToken(CONFIG.client_email, CONFIG.private_key, 'https://www.googleapis.com/auth/datastore');
+    var now = _nowISO();
+    var actualizados = 0;
+    var omitidos = 0;
+
+    // Helper interno: parchea un doc solo si le falta createdAt
+    function patchIfMissing(collPath, docId, doc) {
+      if (doc.createdAt) { omitidos++; return; }
+      var patch = { createdAt: now, updatedAt: now };
+      // Usamos updateMask para tocar SOLO esos 2 campos, sin sobreescribir el resto
+      var keys = Object.keys(patch);
+      var maskQuery = keys.map(function(k) { return 'updateMask.fieldPaths=' + encodeURIComponent(k); }).join('&');
+      var url = 'https://firestore.googleapis.com/v1/projects/' + CONFIG.project_id +
+                '/databases/(default)/documents/' + collPath + '/' + docId + '?' + maskQuery;
+      UrlFetchApp.fetch(url, {
+        method: 'patch',
+        contentType: 'application/json',
+        headers: { Authorization: 'Bearer ' + token },
+        payload: JSON.stringify({ fields: objectToFields(patch) }),
+        muteHttpExceptions: true
+      });
+      actualizados++;
+    }
+
+    // 1. Portafolios y sus equipos (subcolección de portafolios)
+    // Recopilamos también los IDs de equipo para el paso 2
+    var equipoIds = [];
+    var portafolios = firestoreGetCollectionT('portafolios', token);
+    portafolios.forEach(function(port) {
+      patchIfMissing('portafolios', port.id, port);
+      var equiposMeta = firestoreGetCollectionT('portafolios/' + port.id + '/equipos', token);
+      equiposMeta.forEach(function(eq) {
+        patchIfMissing('portafolios/' + port.id + '/equipos', eq.id, eq);
+        // eq.id es el mismo ID usado en la colección raíz equipos/{id}
+        if (eq.id && equipoIds.indexOf(eq.id) === -1) equipoIds.push(eq.id);
+      });
+    });
+
+    // 2. Subcolecciones operativas de cada equipo
+    // NOTA: los docs raíz equipos/{id} pueden no existir; usamos los IDs de portafolios
+    var COLECCIONES = [
+      'miembros', 'capacidades', 'aplicaciones', 'bets', 'mos',
+      'iniciativas', 'stakeholders', 'businessFlows', 'reviews',
+      'salud', 'capacitaciones', 'presentaciones'
+    ];
+    equipoIds.forEach(function(eqId) {
+      // config/main es un doc especial (no colección), parcheamos directamente
+      var configDoc = firestoreGetDocT('equipos/' + eqId + '/config/main', token);
+      if (configDoc) patchIfMissing('equipos/' + eqId + '/config', 'main', configDoc);
+
+      COLECCIONES.forEach(function(col) {
+        var docs = firestoreGetCollectionT('equipos/' + eqId + '/' + col, token);
+        docs.forEach(function(doc) {
+          patchIfMissing('equipos/' + eqId + '/' + col, doc.id, doc);
+        });
+      });
+    });
+
+    var resultado = JSON.stringify({ ok: true, actualizados: actualizados, omitidos: omitidos });
+    console.log('backfillAuditFields resultado:', resultado);
+    return resultado;
+  } catch(e) {
+    console.log('backfillAuditFields ERROR:', e.toString());
+    return JSON.stringify({ ok: false, error: e.toString() });
+  }
+}
+

@@ -1,12 +1,30 @@
 ﻿import { useState } from 'react';
 import type { AppData, Presentacion } from '../../domain/types';
 import {
-  getPresentaciones,
   addPresentacion,
   updatePresentacion,
   deletePresentacion,
 } from '../../application/services/presentacionService';
 import { BX_MODAL_OVERLAY_STYLE, BX_MODAL_PANEL_STYLE } from './modalStyles';
+
+function fmtAudit(iso: string | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+}
+
+function AuditMeta({ createdAt, updatedAt, createdBy, updatedBy }: { createdAt?: string; updatedAt?: string; createdBy?: string; updatedBy?: string }) {
+  if (!createdAt && !updatedAt && !createdBy && !updatedBy) return null;
+  return (
+    <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 12, paddingTop: 10, paddingBottom: 4, display: 'flex', flexWrap: 'wrap', gap: '2px 20px' }}>
+      {createdAt && <span style={{ fontSize: 11, color: '#94a3b8' }}>Creado: <strong style={{ color: '#64748b' }}>{fmtAudit(createdAt)}</strong></span>}
+      {createdBy && <span style={{ fontSize: 11, color: '#94a3b8' }}>Por: <strong style={{ color: '#64748b' }}>{createdBy}</strong></span>}
+      {updatedAt && updatedAt !== createdAt && <span style={{ fontSize: 11, color: '#94a3b8' }}>Modificado: <strong style={{ color: '#64748b' }}>{fmtAudit(updatedAt)}</strong></span>}
+      {updatedBy && updatedBy !== createdBy && <span style={{ fontSize: 11, color: '#94a3b8' }}>Por: <strong style={{ color: '#64748b' }}>{updatedBy}</strong></span>}
+    </div>
+  );
+}
 
 type FormState = {
   titulo: string;
@@ -30,7 +48,8 @@ interface Props {
 }
 
 export default function PresentacionesAdminSection({ data, onSaved }: Props) {
-  const [list, setList] = useState<Presentacion[]>(getPresentaciones);
+  const equipoId = data.config.equipoId || 'eq_planificacion';
+  const [list, setList] = useState<Presentacion[]>(() => data.presentaciones ?? []);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Presentacion | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -43,8 +62,6 @@ export default function PresentacionesAdminSection({ data, onSaved }: Props) {
     padding: '7px 11px', border: '1px solid var(--border)', borderRadius: 7,
     fontSize: 13, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none',
   };
-
-  const reload = () => setList(getPresentaciones());
 
   const openNew = () => {
     setEditing(null);
@@ -88,19 +105,20 @@ export default function PresentacionesAdminSection({ data, onSaved }: Props) {
     };
 
     if (editing) {
-      updatePresentacion(item);
+      updatePresentacion(item, equipoId);
+      setList(prev => prev.map(p => p.id === item.id ? item : p));
     } else {
-      addPresentacion(item);
+      addPresentacion(item, equipoId);
+      setList(prev => [...prev, item]);
     }
-    reload();
     closeForm();
     onSaved?.();
   };
 
   const confirmDoDelete = () => {
     if (!confirmDelete) return;
-    deletePresentacion(confirmDelete.id);
-    reload();
+    deletePresentacion(confirmDelete.id, equipoId);
+    setList(prev => prev.filter(p => p.id !== confirmDelete.id));
     setConfirmDelete(null);
     onSaved?.();
   };
@@ -246,6 +264,7 @@ export default function PresentacionesAdminSection({ data, onSaved }: Props) {
               </div>
             )}
 
+            {editing && <div style={{ padding: '0 22px' }}><AuditMeta createdAt={editing.createdAt} updatedAt={editing.updatedAt} createdBy={editing.createdBy} updatedBy={editing.updatedBy} /></div>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '16px 22px 22px' }}>
               <button type="button" onClick={closeForm} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid #CBD5E1', background: '#fff', color: '#475569', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>Cancelar</button>
               <button type="button" className="btn-save" onClick={handleSave}>{editing ? 'Guardar cambios' : 'Guardar presentación'}</button>

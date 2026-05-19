@@ -19,7 +19,7 @@ function isGAS(): boolean {
   return typeof window !== 'undefined' && !!(window as any)?.google?.script;
 }
 
-function gasAdminRun(method: 'adminCrear' | 'adminActualizar' | 'adminEliminar', ...args: unknown[]): void {
+function gasRun(method: string, ...args: unknown[]): void {
   setTimeout(() => {
     const run = (window as any)?.google?.script?.run;
     if (!run) return;
@@ -30,49 +30,24 @@ function gasAdminRun(method: 'adminCrear' | 'adminActualizar' | 'adminEliminar',
   }, 0);
 }
 
-const SEED_PRESENTACIONES: Presentacion[] = [
-  {
-    id: 'pres_demo_01',
-    titulo: 'Portafolio Distribución - Planificación del Transporte',
-    descripcion: 'Presentación general del portafolio: misión, visión, capacidades y roadmap Q2.',
-    capacidad: 'plan',
-    url: 'https://docs.google.com/presentation/d/1jLOsNwLUZSTflpAMhkgENB0jTfkV1La6/edit?slide=id.p23#slide=id.p23',
-    fechaCreacion: '2026-04-01T00:00:00.000Z',
-  },
-  {
-    id: 'pres_demo_02',
-    titulo: 'Portafolio Distribución - Optimizador de Rutas',
-    descripcion: 'Demo del MVP del Optimizador de Rutas para última milla — Base Valdivia.',
-    capacidad: 'plan',
-    url: 'https://docs.google.com/presentation/d/1jLOsNwLUZSTflpAMhkgENB0jTfkV1La6/edit?slide=id.p23#slide=id.p23',
-    fechaCreacion: '2026-04-15T00:00:00.000Z',
-  },
-];
-
-export function seedPresentacionesIfEmpty(): void {
-  if (readLS().length === 0) {
-    writeLS(SEED_PRESENTACIONES);
-  }
-}
-
 export const getPresentaciones = (): Presentacion[] => readLS();
 
 export const savePresentaciones = (presentaciones: Presentacion[]): void => writeLS(presentaciones);
 
-export const addPresentacion = (p: Presentacion): void => {
+export const addPresentacion = (p: Presentacion, equipoId = 'eq_planificacion'): void => {
   const list = readLS();
   list.push(p);
   writeLS(list);
-  if (isGAS()) gasAdminRun('adminCrear', 'presentaciones', p);
+  if (isGAS()) gasRun('guardarDocumento', equipoId, 'presentaciones', p.id, p);
 };
 
-export const updatePresentacion = (p: Presentacion): void => {
+export const updatePresentacion = (p: Presentacion, equipoId = 'eq_planificacion'): void => {
   writeLS(readLS().map(x => x.id === p.id ? p : x));
-  if (isGAS()) gasAdminRun('adminActualizar', 'presentaciones', p.id, p);
+  if (isGAS()) gasRun('guardarDocumento', equipoId, 'presentaciones', p.id, p);
 };
 
-export const deletePresentacion = (id: string): void => {
+export const deletePresentacion = (id: string, equipoId = 'eq_planificacion'): void => {
   writeLS(readLS().filter(p => p.id !== id));
-  if (isGAS()) gasAdminRun('adminEliminar', 'presentaciones', id);
+  if (isGAS()) gasRun('eliminarDocumento', equipoId, 'presentaciones', id);
 };
 

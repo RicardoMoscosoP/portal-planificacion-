@@ -15,11 +15,112 @@ export default function AdminPanel({ onVolver, userEmail }: { onVolver?: () => v
   const [mostrarForm, setMostrarForm] = useState(false);
   const [savingForm, setSavingForm] = useState(false);
   const [formMsg, setFormMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportMsg, setExportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // ── Export por equipo ──────────────────────────────────────────────────────
+  type PortItem = { id: string; nombre: string; equipos: { id: string; nombre: string }[] };
+  const [portafoliosLista, setPortafoliosLista] = useState<PortItem[]>([]);
+  const [loadingLista, setLoadingLista] = useState(false);
+  const [equipoSeleccionado, setEquipoSeleccionado] = useState('');
+  const [exportandoEquipo, setExportandoEquipo] = useState(false);
+  const [exportEquipoMsg, setExportEquipoMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const enGAS = isGAS();
 
+  // ── Exportar datos completos → descarga JSON ──────────────────────────────
+  const handleExportar = () => {
+    setExporting(true);
+    setExportMsg(null);
+    const g = window as any;
+    const run = g?.google?.script?.run;
+    if (!run) {
+      setExportMsg({ ok: false, text: '❌ google.script.run no disponible' });
+      setExporting(false);
+      return;
+    }
+    run
+      .withSuccessHandler((res: any) => {
+        const r = typeof res === 'string' ? JSON.parse(res) : res;
+        if (r.ok) {
+          const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const fecha = new Date().toISOString().slice(0, 10);
+          a.href = url;
+          a.download = `backup-firestore-${fecha}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          const totalEquipos = (r.portafolios ?? []).reduce((acc: number, p: any) => acc + (p.equipos?.length ?? 0), 0);
+          setExportMsg({ ok: true, text: `✅ Exportado: ${r.portafolios?.length ?? 0} portafolios, ${totalEquipos} equipos` });
+        } else {
+          setExportMsg({ ok: false, text: `❌ Error: ${r.error}` });
+        }
+        setExporting(false);
+      })
+      .withFailureHandler((err: any) => {
+        setExportMsg({ ok: false, text: `❌ ${err?.message ?? 'Error desconocido'}` });
+        setExporting(false);
+      })
+      .exportarDatos();
+  };
 
-  // ── Seed COMPLETO: todo el mockDataLocal.json → Firestore (una sola vez) ──
+  // ── Cargar lista de portafolios/equipos para el selector ──────────────────
+  const handleCargarLista = () => {
+    setLoadingLista(true);
+    setExportEquipoMsg(null);
+    const g = window as any;
+    const run = g?.google?.script?.run;
+    if (!run) { setLoadingLista(false); return; }
+    run
+      .withSuccessHandler((res: any) => {
+        const r = typeof res === 'string' ? JSON.parse(res) : res;
+        if (r.ok) setPortafoliosLista(r.portafolios ?? []);
+        setLoadingLista(false);
+      })
+      .withFailureHandler(() => setLoadingLista(false))
+      .listarPortafoliosEquipos();
+  };
+
+  // ── Exportar un equipo específico → JSON ──────────────────────────────────
+  const handleExportarEquipo = () => {
+    if (!equipoSeleccionado) return;
+    setExportandoEquipo(true);
+    setExportEquipoMsg(null);
+    const g = window as any;
+    const run = g?.google?.script?.run;
+    if (!run) { setExportandoEquipo(false); return; }
+    // Buscamos el nombre del equipo para el nombre del archivo
+    let nombreEquipo = equipoSeleccionado;
+    portafoliosLista.forEach(p => {
+      const eq = p.equipos.find(e => e.id === equipoSeleccionado);
+      if (eq) nombreEquipo = eq.nombre.replace(/\s+/g, '-').toLowerCase();
+    });
+    run
+      .withSuccessHandler((res: any) => {
+        const r = typeof res === 'string' ? JSON.parse(res) : res;
+        if (r.ok) {
+          const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const fecha = new Date().toISOString().slice(0, 10);
+          a.href = url;
+          a.download = `equipo-${nombreEquipo}-${fecha}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          setExportEquipoMsg({ ok: true, text: `✅ Exportado equipo "${nombreEquipo}"` });
+        } else {
+          setExportEquipoMsg({ ok: false, text: `❌ Error: ${r.error}` });
+        }
+        setExportandoEquipo(false);
+      })
+      .withFailureHandler((err: any) => {
+        setExportEquipoMsg({ ok: false, text: `❌ ${err?.message ?? 'Error desconocido'}` });
+        setExportandoEquipo(false);
+      })
+      .exportarEquipo(equipoSeleccionado);
+  };
+
   const handleSeedCompleto = () => {
     setSeedingCompleto(true);
     setSeedCompletoMsg(null);
@@ -145,6 +246,90 @@ export default function AdminPanel({ onVolver, userEmail }: { onVolver?: () => v
                   onSave={handleGuardarPortafolio}
                   onCancel={() => setMostrarForm(false)}
                 />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── GAS: Exportar datos completos → JSON ── */}
+        {enGAS && userEmail === 'ricardo.moscoso@blue.cl' && (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: '20px 24px', marginBottom: 16 }}>
+            <h3 style={{ fontWeight: 700, fontSize: 15, margin: '0 0 6px', color: '#1e293b' }}>
+              📦 Exportar todos los datos → JSON
+            </h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 14px' }}>
+              Descarga un backup completo de Firestore: portafolios, equipos y todas las subcolecciones (miembros, bets, MOS, presentaciones, etc.).
+            </p>
+            <button
+              onClick={handleExportar}
+              disabled={exporting}
+              style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontWeight: 700, fontSize: 14, cursor: exporting ? 'not-allowed' : 'pointer', opacity: exporting ? 0.7 : 1 }}
+            >
+              {exporting ? 'Exportando...' : '⬇️ Descargar backup JSON'}
+            </button>
+            {exportMsg && (
+              <div style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: exportMsg.ok ? '#059669' : '#dc2626' }}>
+                {exportMsg.text}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── GAS: Exportar por equipo ── */}
+        {enGAS && userEmail === 'ricardo.moscoso@blue.cl' && (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: '20px 24px', marginBottom: 16 }}>
+            <h3 style={{ fontWeight: 700, fontSize: 15, margin: '0 0 6px', color: '#1e293b' }}>
+              🗂️ Exportar por equipo → JSON
+            </h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 14px' }}>
+              Selecciona un equipo para descargar solo sus datos (config, miembros, bets, MOS, presentaciones, etc.).
+            </p>
+
+            {portafoliosLista.length === 0 ? (
+              <button
+                onClick={handleCargarLista}
+                disabled={loadingLista}
+                style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, fontSize: 13, cursor: loadingLista ? 'not-allowed' : 'pointer', opacity: loadingLista ? 0.7 : 1 }}
+              >
+                {loadingLista ? 'Cargando lista...' : '🔄 Cargar equipos'}
+              </button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <select
+                  value={equipoSeleccionado}
+                  onChange={e => { setEquipoSeleccionado(e.target.value); setExportEquipoMsg(null); }}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, color: '#1e293b', background: '#f8fafc' }}
+                >
+                  <option value=''>— Selecciona un equipo —</option>
+                  {portafoliosLista.map(p => (
+                    <optgroup key={p.id} label={p.nombre}>
+                      {p.equipos.map(eq => (
+                        <option key={eq.id} value={eq.id}>{eq.nombre}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={handleExportarEquipo}
+                    disabled={!equipoSeleccionado || exportandoEquipo}
+                    style={{ background: '#0f172a', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 700, fontSize: 13, cursor: (!equipoSeleccionado || exportandoEquipo) ? 'not-allowed' : 'pointer', opacity: (!equipoSeleccionado || exportandoEquipo) ? 0.6 : 1 }}
+                  >
+                    {exportandoEquipo ? 'Exportando...' : '⬇️ Descargar equipo'}
+                  </button>
+                  <button
+                    onClick={() => { setPortafoliosLista([]); setEquipoSeleccionado(''); setExportEquipoMsg(null); }}
+                    style={{ background: 'transparent', border: '1px solid #cbd5e1', borderRadius: 8, padding: '8px 14px', fontSize: 13, color: '#64748b', cursor: 'pointer' }}
+                  >
+                    Cambiar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {exportEquipoMsg && (
+              <div style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: exportEquipoMsg.ok ? '#059669' : '#dc2626' }}>
+                {exportEquipoMsg.text}
               </div>
             )}
           </div>

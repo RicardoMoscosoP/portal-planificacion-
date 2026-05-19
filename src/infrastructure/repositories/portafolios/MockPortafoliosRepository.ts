@@ -15,15 +15,21 @@ export class MockPortafoliosRepository implements IPortafoliosRepository {
   }
 
   async getAll(): Promise<Portafolio[]> {
-    return [...this.data];
+    // Retorna ordenado por createdAt DESC (más reciente primero)
+    return [...this.data].sort((a, b) => {
+      const aDate = a.createdAt ?? '';
+      const bDate = b.createdAt ?? '';
+      return bDate.localeCompare(aDate);
+    });
   }
 
   async save(portafolio: Portafolio): Promise<void> {
+    const now = new Date().toISOString();
     const idx = this.data.findIndex(p => p.id === portafolio.id);
     if (idx >= 0) {
-      this.data[idx] = portafolio;
+      this.data[idx] = { ...portafolio, updatedAt: now };
     } else {
-      this.data.push(portafolio);
+      this.data.push({ ...portafolio, createdAt: portafolio.createdAt ?? now, updatedAt: now });
     }
   }
 

@@ -31,15 +31,20 @@ export interface TeamMember {
   iniciales: string;
   foto_url?: string;       // Google Drive URL en prod; picsum en mock
   activo: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Roles canónicos de equipo ─────────────────────────────────────────────
 export const ROLES_EQUIPO = [
-  { codigo: 'tech_leader',       descripcion: 'Tech Leader' },
   { codigo: 'product_owner',     descripcion: 'Product Owner' },
   { codigo: 'iteration_manager', descripcion: 'Iteration Manager' },
-  { codigo: 'fullstack_frontend',descripcion: 'Full Stack / Front End' },
-  { codigo: 'datos_analytics',   descripcion: 'Datos / Analytics' },
+  { codigo: 'tech_leader',       descripcion: 'Tech Leader' },
+  { codigo: 'front_end',         descripcion: 'Front End' },
+  { codigo: 'full_stack',        descripcion: 'Full Stack' },
+  { codigo: 'backend',           descripcion: 'Backend' },
 ] as const;
 
 export type RolEquipoCodigo = typeof ROLES_EQUIPO[number]['codigo'];
@@ -69,6 +74,10 @@ export interface Salud {
   fechaDeteccion: string;
   fechaRevision: string;
   activo: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Capacitacion ──────────────────────────────────────────────────────────────
@@ -89,6 +98,10 @@ export interface Capacitacion {
   fecha?: string;
   activo: boolean;
   orden: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Alcance (elemento dentro de una Capacidad) ───────────────────────────────
@@ -114,6 +127,10 @@ export interface Aplicacion {
   alcanceKey?: string;           // alcance al que pertenece
   activo?: boolean;
   ultimo_release?: UltimoRelease; // release más reciente embebido
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Capacidad ─────────────────────────────────────────────────────────────────
@@ -167,7 +184,12 @@ export interface Iniciativa {
   mes_inicio?: string;      // ej: "2026-04"
   mes_fin?: string;         // ej: "2026-06"
   mos_asociados?: string[]; // ids de MOS que valida esta iniciativa
+  capacidadKeys?: string[]; // capacidades asociadas (mínimo 1)
   entregables?: EntregableItem[];
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Review ────────────────────────────────────────────────────────────────────
@@ -236,6 +258,10 @@ export interface Review {
   demoItems?: ReviewBloque[];
   riesgos: ReviewBloque[];
   mos_actuals?: Record<string, string>;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Estado genérico de ítems ─────────────────────────────────────────────────
@@ -261,6 +287,10 @@ export interface Bet {
   mos_inactivos?: string[];
   orden: number;
   activo?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── MOS (Measure of Success) ──────────────────────────────────────────────────
@@ -274,6 +304,10 @@ export interface MOS {
   meta?: string;
   actual?: string;
   orden: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Stakeholder ──────────────────────────────────────────────────────────────
@@ -284,6 +318,10 @@ export interface Stakeholder {
   q: 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'ALL';
   capacidadKeys: string[];
   activo: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Flujos de negocio ────────────────────────────────────────────────────────
@@ -299,6 +337,10 @@ export interface BusinessFlow {
   color?: string;
   activo: boolean;
   orden: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // ── Entregable (tarea dentro de una Iniciativa) ───────────────────────────────
@@ -317,6 +359,7 @@ export interface Entregable {
   orden?: number;
   estado?: 'backlog' | 'in_progress' | 'done';
   label?: string;
+  aplicacionId?: string; // app que entrega este entregable
 }
 
 // ── Usuario (control de acceso) ──────────────────────────────────────────────
@@ -346,6 +389,7 @@ export interface AppData {
   reviews: Review[];
   salud?: Salud[];
   capacitaciones?: Capacitacion[];
+  presentaciones?: Presentacion[];
   usuario?: Usuario;
 }
 
@@ -356,7 +400,10 @@ export interface Equipo {
   descripcion?: string;
   portafolioId: string;
   activo?: boolean;
-  creadoEn?: string; // ISO timestamp
+  createdAt?: string;  // ISO 8601 — fecha de inserción
+  updatedAt?: string;  // ISO 8601 — fecha de última actualización
+  createdBy?: string;  // email del usuario que creó
+  updatedBy?: string;  // email del usuario que actualizó por última vez
 }
 
 // ── Portafolio ───────────────────────────────────────────────────────────────
@@ -366,7 +413,10 @@ export interface Portafolio {
   descripcion?: string;
   equipos: Equipo[];
   activo?: boolean;
-  creadoEn?: string; // ISO timestamp
+  createdAt?: string;  // ISO 8601 — fecha de inserción
+  updatedAt?: string;  // ISO 8601 — fecha de última actualización
+  createdBy?: string;  // email del usuario que creó
+  updatedBy?: string;  // email del usuario que actualizó por última vez
 }
 
 // ── Estructura raíz para multi-portafolio ─────────────────────────────────────
@@ -382,4 +432,8 @@ export interface Presentacion {
   fechaCreacion: string; // ISO
   capacidad?: string;
   url: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }

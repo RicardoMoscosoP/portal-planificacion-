@@ -26,7 +26,7 @@ export function formatFecha(fecha: string) {
   return fecha;
 }
 import { useEffect, useState } from 'react';
-import type { AppData, Bet, Entregable, Iniciativa } from '../../domain/types';
+import type { AppData, Aplicacion, Bet, Entregable, Iniciativa } from '../../domain/types';
 import { BX_MODAL_OVERLAY_STYLE, BX_MODAL_PANEL_STYLE } from '../components/modalStyles';
 
 const Q_MONTHS_DEF: Record<number, Array<{ short: string; long: string; month: number }>> = {
@@ -220,7 +220,7 @@ function EntregableDetailModal({ entregable, color, onClose }: { entregable: Ent
   );
 }
 
-function IniciativaDetailModal({ iniciativa, color, onClose }: { iniciativa: Iniciativa; color: string; onClose: () => void }) {
+function IniciativaDetailModal({ iniciativa, color, onClose, capacidades }: { iniciativa: Iniciativa; color: string; onClose: () => void; capacidades: import('../../domain/types').Capacidad[] }) {
   return (
     <div onClick={onClose} style={{ ...BX_MODAL_OVERLAY_STYLE, zIndex: 200, padding: 18 }}>
       <div
@@ -261,6 +261,11 @@ function IniciativaDetailModal({ iniciativa, color, onClose }: { iniciativa: Ini
             {iniciativa.descripcion?.trim() || 'Esta iniciativa no tiene detalle cargado en configuraciones.'}
           </div>
         </div>
+        {(iniciativa.capacidadKeys ?? []).length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+            {(iniciativa.capacidadKeys ?? []).map(key => { const cap = capacidades.find(c => c.key === key); return cap ? <span key={key} style={{ fontSize: 11, fontWeight: 700, color: cap.color, background: cap.color + '18', borderRadius: 6, padding: '3px 10px', border: `1px solid ${cap.color}35` }}>{cap.label}</span> : null; })}
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
           <div style={{ background: '#F8FAFF', borderRadius: 12, border: '1px solid #DBEAFE', padding: '12px 14px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748B', marginBottom: 4, fontFamily: 'Manrope, sans-serif' }}>
@@ -286,8 +291,8 @@ const ENT_ESTADO_COLORS: Record<string, { bg: string; color: string; label: stri
   done:        { bg: '#DCFCE7', color: '#15803D', label: 'Done' },
 };
 
-function IniciativaRow({ iniciativa, entregables, bets, q, defaultOpen = false, onOpenEntregable, onOpenIniciativa }: {
-  iniciativa: Iniciativa; entregables: Entregable[]; bets: Bet[]; q: number; defaultOpen?: boolean; onOpenEntregable: (entregable: Entregable, color: string) => void; onOpenIniciativa: (iniciativa: Iniciativa, color: string) => void;
+function IniciativaRow({ iniciativa, entregables, bets, aplicaciones, capacidades, q, defaultOpen = false, onOpenEntregable, onOpenIniciativa }: {
+  iniciativa: Iniciativa; entregables: Entregable[]; bets: Bet[]; aplicaciones: Aplicacion[]; capacidades: import('../../domain/types').Capacidad[]; q: number; defaultOpen?: boolean; onOpenEntregable: (entregable: Entregable, color: string) => void; onOpenIniciativa: (iniciativa: Iniciativa, color: string) => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const bet = bets.find(b => (b.productos ?? []).includes(iniciativa.producto) || b.producto === iniciativa.producto);
@@ -299,28 +304,35 @@ function IniciativaRow({ iniciativa, entregables, bets, q, defaultOpen = false, 
 
   const tagLabel = (tag: string) => tag === 'done' ? 'Done' : tag === 'wip' ? 'In Progress' : 'Backlog';
   const iniEntregables = entregables.filter(entregable => entregable.iniciativaId === iniciativa.id && entregable.q === q && entregable.activo !== false);
-  // Total de entregables de la iniciativa en todos los Qs
-  const totalEntregables = entregables.filter(entregable => entregable.iniciativaId === iniciativa.id && entregable.activo !== false).length;
 
   return (
     <div className={`rm-cap-row${open ? ' open' : ''}`}>
       <div className="rm-cap-hdr" onClick={() => setOpen(o => !o)} style={{ borderLeft: `4px solid ${iniColor}` }}>
         <div className="rm-cap-info">
           <div className="rm-cap-name">
-            <span style={{ width: 9, height: 9, borderRadius: '50%', background: iniColor, display: 'inline-block', flexShrink: 0 }} />
-            {iniciativa.emoji} {iniciativa.nombre}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenIniciativa(iniciativa, iniColor); }}
+              className="rm-link"
+              style={{ fontSize: 14, fontWeight: 700, '--rm-link-color': iniColor } as React.CSSProperties}
+            >
+              {iniciativa.emoji} {iniciativa.nombre}
+            </button>
             <span className="rm-chev">&#9654;</span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingLeft: 16, marginTop: 1, flexWrap: 'wrap' }}>
+            <span className={`rm-init-tag t-${iniciativa.tag}`}>{tagLabel(iniciativa.tag)}</span>
+            <span style={{ fontSize: 10, color: '#94A3B8', fontWeight: 600, whiteSpace: 'nowrap' }}>{iniciativa.fechas}</span>
+            {iniciativa.producto && (
+              <span style={{ fontSize: 9, fontWeight: 700, color: iniColor, background: iniColor + '18', borderRadius: 4, padding: '1px 6px', border: `1px solid ${iniColor}35`, whiteSpace: 'nowrap' }}>
+                {iniciativa.producto}
+              </span>
+            )}
+            {(iniciativa.capacidadKeys ?? []).map(key => { const cap = capacidades.find(c => c.key === key); return cap ? <span key={key} style={{ fontSize: 9, fontWeight: 700, color: cap.color, background: cap.color + '18', borderRadius: 4, padding: '1px 6px', border: `1px solid ${cap.color}35`, whiteSpace: 'nowrap' }}>{cap.label}</span> : null; })}
+          </div>
         </div>
-        <div className="rm-cap-bars" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, padding: '0 16px' }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: '#94A3B8', fontFamily: 'Manrope, sans-serif' }}>
-            {iniEntregables.length} en Q{q}
-          </span>
-          {totalEntregables !== iniEntregables.length && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#CBD5E1', fontFamily: 'Manrope, sans-serif' }}>
-              · {totalEntregables} total
-            </span>
-          )}
+        <div className="rm-cap-bars">
+          <BarCols bar={iniciativa.bar} color={iniColor} label={iniciativa.label} />
         </div>
       </div>
       <div className="rm-inits">
@@ -330,27 +342,6 @@ function IniciativaRow({ iniciativa, entregables, bets, q, defaultOpen = false, 
           </div>
         ) : (
           <div>
-            <div className="rm-init-row">
-              <div className="rm-init-info">
-                <div className="rm-init-name" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => onOpenIniciativa(iniciativa, iniColor)}
-                    className="rm-link"
-                    style={{ fontSize: 12, '--rm-link-color': iniColor } as React.CSSProperties}
-                  >
-                    Iniciativa
-                  </button>
-                  <span className={`rm-init-tag t-${iniciativa.tag}`}>{tagLabel(iniciativa.tag)}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div className="rm-init-meta">{iniciativa.fechas}</div>
-                </div>
-              </div>
-              <div className="rm-init-bars">
-                <BarCols bar={iniciativa.bar} color={iniColor} label={iniciativa.label} />
-              </div>
-            </div>
             {iniEntregables.map(entregable => (
               <div key={entregable.id} className="rm-init-row" style={{ background: '#FAFBFF' }}>
                 <div className="rm-init-info" style={{ paddingLeft: 36 }}>
@@ -364,6 +355,7 @@ function IniciativaRow({ iniciativa, entregables, bets, q, defaultOpen = false, 
                       {entregable.titulo}
                     </button>
                     {(() => { const ec = ENT_ESTADO_COLORS[(entregable as any).estado ?? 'backlog'] ?? ENT_ESTADO_COLORS.backlog; return <span style={{ background: ec.bg, color: ec.color, borderRadius: 5, padding: '1px 7px', fontSize: 9, fontWeight: 800, marginLeft: 4, letterSpacing: '0.05em', textTransform: 'uppercase' as const, fontFamily: 'Manrope, sans-serif', flexShrink: 0 }}>{ec.label}</span>; })()}
+                    {(() => { const app = aplicaciones.find(a => a.id === entregable.aplicacionId); return app ? <span style={{ fontSize: 9, fontWeight: 700, color: '#1D4ED8', background: '#EEF2FF', borderRadius: 4, padding: '1px 6px', border: '1px solid #C7D7FE', marginLeft: 4, flexShrink: 0 }}>{app.nombre}</span> : null; })()}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <div className="rm-init-meta">{formatFecha(entregable.fechaInicio)} → {formatFecha(entregable.fechaFin)}</div>
@@ -437,6 +429,8 @@ function QuarterRoadmap({ data, q, expandedCapKeys = [] }: { data: AppData; q: n
             iniciativa={r.iniciativa}
             entregables={r.entregables}
             bets={bets}
+            aplicaciones={data.aplicaciones ?? []}
+            capacidades={data.capacidades ?? []}
             q={q}
             defaultOpen={expandedCapKeys.includes(r.iniciativaId)}
             onOpenIniciativa={(iniciativa, color) => {
@@ -465,6 +459,7 @@ function QuarterRoadmap({ data, q, expandedCapKeys = [] }: { data: AppData; q: n
           iniciativa={detailIniciativa}
           color={detailColor}
           onClose={() => setDetailIniciativa(null)}
+          capacidades={data.capacidades ?? []}
         />
       )}
     </div>
