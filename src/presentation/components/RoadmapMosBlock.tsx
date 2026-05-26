@@ -110,10 +110,10 @@ export function MosSection({ bets, mos, q }: { bets: Bet[]; mos: MOS[]; q?: stri
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* ── Tabla Bets / MOS ── */}
-      <div style={{ background: '#fff', border: '1px solid #DCE7FF', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(10,22,80,0.05)' }}>
+      {/* ── Tabla Bets / MOS con Paleta Pastel ── */}
+      <div style={{ background: '#fff', border: '1px solid #E8DFE8', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(10,22,80,0.05)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-          <thead style={{ background: '#0032A0', color: '#fff' }}>
+          <thead style={{ background: 'linear-gradient(135deg, #E6D9F0 0%, #F0E8F5 100%)', color: '#1B30CC', borderBottom: '2px solid #D6C9E0' }}>
             <tr>
               <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Bet / LVT</th>
               <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>MOS del Bet</th>
@@ -123,68 +123,74 @@ export function MosSection({ bets, mos, q }: { bets: Bet[]; mos: MOS[]; q?: stri
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ bet, activeMos }, betIndex) => (
-              <tr
-                key={bet.id}
-                style={{ borderBottom: betIndex < rows.length - 1 ? '1px solid #DCE7FF' : 'none' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#F5F7FA')}
-                onMouseLeave={e => (e.currentTarget.style.background = '')}
-              >
-                {/* Bet / LVT */}
-                <td style={{ padding: '20px', verticalAlign: 'top', textAlign: 'left' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2, background: `${bet.color}33`, color: bet.color }}>●</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, marginBottom: 8, lineHeight: 1.4, color: '#0A1650', fontSize: 14 }}>{bet.descripcion}</div>
-                      <div>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.2px', marginRight: 5 }}>Producto:</span>
-                        {getBetProducts(bet).map(product => (
-                          <span key={product} style={{ display: 'inline-block', padding: '4px 9px', borderRadius: 4, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', background: `${bet.color}14`, color: bet.color, border: `1px solid ${bet.color}26`, marginRight: 4 }}>
-                            {product}
-                          </span>
-                        ))}
+            {rows.map(({ bet, activeMos }, betIndex) => {
+              const isEvenRow = betIndex % 2 === 0;
+              return (
+                <tr
+                  key={bet.id}
+                  style={{ 
+                    borderBottom: betIndex < rows.length - 1 ? '1px solid #E8DFE8' : 'none',
+                    background: isEvenRow ? '#FFFBF5' : '#F5F0FA'
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#F9F3FC')}
+                  onMouseLeave={e => (e.currentTarget.style.background = isEvenRow ? '#FFFBF5' : '#F5F0FA')}
+                >
+                  {/* Bet / LVT */}
+                  <td style={{ padding: '20px', verticalAlign: 'top', textAlign: 'left' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2, background: `${bet.color}33`, color: bet.color }}>●</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, marginBottom: 8, lineHeight: 1.4, color: '#0A1650', fontSize: 14 }}>{bet.descripcion}</div>
+                        <div>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.2px', marginRight: 5 }}>Producto:</span>
+                          {getBetProducts(bet).map(product => (
+                            <span key={product} style={{ display: 'inline-block', padding: '4px 9px', borderRadius: 4, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', background: `${bet.color}14`, color: bet.color, border: `1px solid ${bet.color}26`, marginRight: 4 }}>
+                              {product}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                {/* MOS del Bet */}
-                <td style={{ padding: '20px', verticalAlign: 'top', maxWidth: 260, textAlign: 'left' }}>
-                  {activeMos.map((item, idx) => {
-                    const indicator = item.descripcion.trim().startsWith('(+)') ? '(+)' : (item.descripcion.trim().startsWith('(-)') || item.descripcion.trim().startsWith('(–)')) ? '(–)' : '';
-                    const descText = item.descripcion.replace(/^\([+\-–]\)\s*/, '');
-                    return (
-                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 12 : 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13.5, marginBottom: 2, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          {indicator && <span style={{ fontWeight: 700, minWidth: 32, color: '#0A1650', flexShrink: 0 }}>{indicator}</span>}
-                          <span style={{ color: '#0A1650', lineHeight: 1.4 }}>{descText}</span>
+                  </td>
+                  {/* MOS del Bet */}
+                  <td style={{ padding: '20px', verticalAlign: 'top', maxWidth: 260, textAlign: 'left' }}>
+                    {activeMos.map((item, idx) => {
+                      const indicator = item.descripcion.trim().startsWith('(+)') ? '(+)' : (item.descripcion.trim().startsWith('(-)') || item.descripcion.trim().startsWith('(–)')) ? '(–)' : '';
+                      const descText = item.descripcion.replace(/^\([+\-–]\)\s*/, '');
+                      return (
+                        <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 12 : 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: 13.5, marginBottom: 2, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                            {indicator && <span style={{ fontWeight: 700, minWidth: 32, color: '#0A1650', flexShrink: 0 }}>{indicator}</span>}
+                            <span style={{ color: '#0A1650', lineHeight: 1.4 }}>{descText}</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#999', paddingLeft: indicator ? 40 : 0 }}>
+                            {q ? q : getMosQuarters(item).join(', ')}
+                          </div>
                         </div>
-                        <div style={{ fontSize: 12, color: '#999', paddingLeft: indicator ? 40 : 0 }}>
-                          {q ? q : getMosQuarters(item).join(', ')}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </td>
-                {/* Base */}
-                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#666', background: 'rgba(0,0,0,0.02)' }}>
-                  {activeMos.map((item, idx) => (
-                    <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0 }}>{item.linea_base || '—'}</div>
-                  ))}
-                </td>
-                {/* Meta */}
-                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#0032A0', background: 'rgba(0,50,160,0.04)' }}>
-                  {activeMos.map((item, idx) => (
-                    <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0 }}>{item.meta || '—'}</div>
-                  ))}
-                </td>
-                {/* Real */}
-                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#2BB8D4', background: 'rgba(43,184,212,0.05)' }}>
-                  {activeMos.map((item, idx) => (
-                    <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0 }}>{item.actual || '—'}</div>
-                  ))}
-                </td>
-              </tr>
-            ))}
+                      );
+                    })}
+                  </td>
+                  {/* Base - Amarillo Pastel */}
+                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#F57F17', background: 'linear-gradient(135deg, #FFF4D4 0%, #FFF9E8 100%)' }}>
+                    {activeMos.map((item, idx) => (
+                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0, padding: '6px 10px', borderRadius: 8, background: 'rgba(255, 212, 63, 0.15)', border: '1px solid rgba(245, 127, 23, 0.2)' }}>{item.linea_base || '—'}</div>
+                    ))}
+                  </td>
+                  {/* Meta - Lavanda Pastel */}
+                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#1B30CC', background: 'linear-gradient(135deg, #E6D9F0 0%, #F0E8F5 100%)' }}>
+                    {activeMos.map((item, idx) => (
+                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0, padding: '6px 10px', borderRadius: 8, background: 'rgba(27, 48, 204, 0.1)', border: '1px solid rgba(27, 48, 204, 0.25)' }}>{item.meta || '—'}</div>
+                    ))}
+                  </td>
+                  {/* Real - Rosa Pastel */}
+                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#C2185B', background: 'linear-gradient(135deg, #FFD4E5 0%, #FFE5F0 100%)' }}>
+                    {activeMos.map((item, idx) => (
+                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0, padding: '6px 10px', borderRadius: 8, background: 'rgba(194, 24, 91, 0.1)', border: '1px solid rgba(194, 24, 91, 0.2)' }}>{item.actual || '—'}</div>
+                    ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
