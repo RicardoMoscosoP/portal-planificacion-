@@ -16,52 +16,52 @@ function SecHdr({ label }: { label: string }) {
 // ── Quick Access Card ───────────────────────────────────────────────────────
 
 function QuickAccessCard({ icon, label, description, onClick, color = '#1B30CC', sublabel = 'Acceso' }: { icon: React.ReactNode; label: string; description: string; onClick: () => void; color?: string; sublabel?: string }) {
+  const [isHovered, setIsHovered] = React.useState(false);
   return (
     <button
       onClick={onClick}
       type="button"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
-        background: '#fff',
-        border: '1px solid var(--border)',
-        borderRadius: 16,
-        padding: 20,
+        background: `linear-gradient(135deg, #fff 0%, ${color}06 100%)`,
+        border: isHovered ? `2px solid ${color}` : '1px solid #E5E7EB',
+        borderRadius: 18,
+        padding: 24,
         cursor: 'pointer',
         textAlign: 'left' as const,
-        boxShadow: '0 10px 28px rgba(15,23,42,0.06)',
+        boxShadow: isHovered ? `0 20px 40px ${color}20, inset 0 1px 1px rgba(255,255,255,0.5)` : '0 4px 12px rgba(0,0,0,0.06)',
         display: 'flex',
         flexDirection: 'column' as const,
-        flex: '1 1 220px',
-        minWidth: 200,
-        transition: 'transform 0.15s, box-shadow 0.15s',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-3px)';
-        e.currentTarget.style.boxShadow = '0 18px 38px rgba(0,0,0,0.12)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 10px 28px rgba(15,23,42,0.06)';
+        flex: '1 1 240px',
+        minWidth: 220,
+        transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, width: 100, height: 100, background: `${color}08`, borderRadius: '50%', transform: 'translate(30%, -30%)', transition: 'transform 0.3s ease' }} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16, position: 'relative', zIndex: 1 }}>
         <div style={{
-          width: 46, height: 46, borderRadius: 14,
-          background: `${color}18`,
+          width: 56, height: 56, borderRadius: 16,
+          background: `linear-gradient(135deg, ${color}20 0%, ${color}08 100%)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: color, fontSize: 22, flexShrink: 0,
+          color: color, fontSize: 24, flexShrink: 0,
+          boxShadow: `0 8px 16px ${color}15`,
+          border: `1px solid ${color}20`,
         }}>
           {icon}
         </div>
-        <div>
-          <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: color, marginBottom: 4 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' as const, color: color, marginBottom: 2, opacity: 0.8 }}>
             {sublabel}
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0F1C40' }}>{label}</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#0A1650', letterSpacing: '-0.02em' }}>{label}</div>
         </div>
       </div>
-      <div style={{ fontSize: 13, lineHeight: 1.6, color: '#475569', flex: 1 }}>{description}</div>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 999, background: '#F8FAFC', color: color, fontSize: 11, fontWeight: 700, border: '1px solid #E2E8F0', marginTop: 14 }}>
-        Ir a {label} →
+      <div style={{ fontSize: 13, lineHeight: 1.7, color: '#64748B', flex: 1, position: 'relative', zIndex: 1 }}>{description}</div>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 12, background: color, color: '#fff', fontSize: 12, fontWeight: 700, marginTop: 16, position: 'relative', zIndex: 1, opacity: isHovered ? 1 : 0.95, transform: isHovered ? 'translateX(4px)' : 'translateX(0)', transition: 'all 0.2s ease' }}>
+        Ir a {label} <span style={{ fontSize: 16 }}>→</span>
       </div>
     </button>
   );
@@ -74,45 +74,59 @@ function CapacidadCard({ cap, q, iniciativas, onClick }: { cap: Capacidad; q: nu
   const done = iniciativas.filter(i => i.q === q && i.producto === cap.key && i.tag === 'done').length;
   const wip = iniciativas.filter(i => i.q === q && i.producto === cap.key && i.tag === 'wip').length;
   const showLabel = cap.label.trim().toLocaleLowerCase() !== cap.nombre.trim().toLocaleLowerCase();
+  const completionRate = total > 0 ? (done / total) * 100 : 0;
+  const [isHovered, setIsHovered] = React.useState(false);
   
   return (
-    <div className="gc" style={{ '--gc-color': cap.color } as React.CSSProperties} onClick={onClick}>
-      <span className="gc-arrow">&#8599;</span>
-      {showLabel && <div className="gc-lbl">{cap.label}</div>}
-      <div className="gc-name">{cap.nombre}</div>
-      <div className="gc-caps">
+    <div 
+      className="gc" 
+      style={{ '--gc-color': cap.color, opacity: isHovered ? 1 : 0.95, transform: isHovered ? 'translateY(-4px)' : 'translateY(0)' } as React.CSSProperties}
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, background: `${cap.color}08`, borderRadius: '50%', transform: 'translate(40%, -40%)', zIndex: 0 }} />
+      <span className="gc-arrow" style={{ zIndex: 2 }}>↗</span>
+      {showLabel && <div className="gc-lbl" style={{ zIndex: 2 }}>{cap.label}</div>}
+      <div className="gc-name" style={{ zIndex: 2 }}>{cap.nombre}</div>
+      <div className="gc-caps" style={{ zIndex: 2 }}>
         {cap.alcances.slice(0, 4).map(a => (
           <div key={a.key} className="gc-cap">
-            <span className="gc-cap-dot" style={{ background: a.color }} />
+            <span className="gc-cap-dot" style={{ background: a.color, boxShadow: `0 0 8px ${a.color}60` }} />
             {a.nombre}
-            {a.badge && <span style={{ fontSize: 9, fontWeight: 700, background: '#D1FAE5', color: '#065F46', padding: '1px 5px', borderRadius: 3, marginLeft: 2 }}>{a.badge}</span>}
+            {a.badge && <span style={{ fontSize: 9, fontWeight: 700, background: '#D1FAE5', color: '#065F46', padding: '2px 6px', borderRadius: 4, marginLeft: 3, fontFamily: 'Manrope, sans-serif' }}>{a.badge}</span>}
           </div>
         ))}
         {cap.alcances.length > 4 && (
-          <div className="gc-cap" style={{ background: '#E0E7FF', color: '#4338CA', border: 'none' }}>
+          <div className="gc-cap" style={{ background: `linear-gradient(135deg, ${cap.color}20 0%, ${cap.color}08 100%)`, color: cap.color, border: `1px solid ${cap.color}40`, fontWeight: 700 }}>
             +{cap.alcances.length - 4} más
           </div>
         )}
       </div>
-      <div className="gc-foot">
+      <div className="gc-foot" style={{ zIndex: 2 }}>
         <div>
-          <div className="gc-count">{total}</div>
+          <div className="gc-count" style={{ fontSize: 28, fontWeight: 900, color: cap.color }}>{total}</div>
           <div className="gc-count-lbl">iniciativas Q{q}</div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {total > 0 && (
+            <div style={{ width: '100%', height: 6, background: '#E5E7EB', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: `linear-gradient(90deg, #065F46 0%, ${cap.color} 100%)`, width: `${completionRate}%`, transition: 'width 0.3s ease' }} />
+            </div>
+          )}
           {done > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 700, background: '#D1FAE5', color: '#065F46', padding: '4px 8px', borderRadius: 6 }}>
-              {done} listas
+            <span style={{ fontSize: 11, fontWeight: 700, background: '#D1FAE5', color: '#065F46', padding: '5px 10px', borderRadius: 8, fontFamily: 'Manrope, sans-serif' }}>
+              ✓ {done} listas
             </span>
           )}
           {wip > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 700, background: '#DBEAFE', color: '#1D4ED8', padding: '4px 8px', borderRadius: 6 }}>
-              {wip} en curso
+            <span style={{ fontSize: 11, fontWeight: 700, background: '#DBEAFE', color: '#1D4ED8', padding: '5px 10px', borderRadius: 8, fontFamily: 'Manrope, sans-serif' }}>
+              ◐ {wip} en curso
             </span>
           )}
         </div>
       </div>
-      <span className="gc-detail">Ver roadmap &#8594;</span>
+      <span className="gc-detail" style={{ zIndex: 2 }}>Ver roadmap &#8594;</span>
     </div>
   );
 }
@@ -164,12 +178,15 @@ export default function DashboardHome({ data, q, onNavCapacidad, onNav }: Props)
 
   return (
     <div className="page-shell inicio-page inicio-contenedor">
-      <div className="page-intro">
-        <h1 className="page-title">Panel del Equipo</h1>
-        <p className="page-subtitle">Estado actual del quarter, métricas clave y accesos rápidos a las secciones principales.</p>
+      <div className="page-intro" style={{ background: 'linear-gradient(135deg, #F0F4FF 0%, #E0E7FF 100%)', borderRadius: 20, padding: 32, marginBottom: 32, border: '1px solid #D6E0FF', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, right: 0, width: 200, height: 200, background: 'radial-gradient(circle, rgba(27,48,204,0.1) 0%, transparent 70%)', borderRadius: '50%', transform: 'translate(50%, -30%)' }} />
+        <h1 className="page-title" style={{ fontSize: 32, letterSpacing: '-0.02em', color: '#0A1650', position: 'relative', zIndex: 1 }}>Panel del Equipo</h1>
+        <p className="page-subtitle" style={{ fontSize: 15, color: '#475569', marginTop: 8, maxWidth: 600, lineHeight: 1.6, position: 'relative', zIndex: 1 }}>
+          Estado actual del quarter, métricas clave y accesos rápidos a las secciones principales de tu equipo.
+        </p>
       </div>
 
-      <div className="page-body inicio-body" style={{ marginTop: 40 }}>
+      <div className="page-body inicio-body">
         {/* MOS / BETs — filtrado por Q activo */}
         <SecHdr label={`Métricas de Éxito (MOS) — Q${q}`} />
         <div style={{ marginBottom: 48 }}>
