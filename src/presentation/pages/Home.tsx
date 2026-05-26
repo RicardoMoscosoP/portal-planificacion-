@@ -133,7 +133,7 @@ function CapacidadCard({ cap, q, iniciativas, onClick }: { cap: Capacidad; q: nu
   );
 }
 
-// ── Stakeholder Item ────────────────────────────────────────────────────────
+// ── Stakeholder Item ──────────────────────────────────��─────────────────────
 
 function getInitials(nombre: string): string {
   return nombre.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -196,15 +196,50 @@ export default function Home({ data, q, onNavCapacidad, onNav }: Props) {
 
   return (
     <div className="page-shell inicio-page inicio-contenedor">
-      <div className="page-intro" style={{ background: 'linear-gradient(135deg, #F0F4FF 0%, #E0E7FF 100%)', borderRadius: 20, padding: 32, marginBottom: 32, border: '1px solid #D6E0FF', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 0, right: 0, width: 200, height: 200, background: 'radial-gradient(circle, rgba(27,48,204,0.1) 0%, transparent 70%)', borderRadius: '50%', transform: 'translate(50%, -30%)' }} />
-        <h1 className="page-title" style={{ fontSize: 32, letterSpacing: '-0.02em', color: '#0A1650', position: 'relative', zIndex: 1 }}>Panel del Equipo</h1>
-        <p className="page-subtitle" style={{ fontSize: 15, color: '#475569', marginTop: 8, maxWidth: 600, lineHeight: 1.6, position: 'relative', zIndex: 1 }}>
-          Estado actual del quarter, métricas clave y accesos rápidos a las secciones principales de tu equipo.
-        </p>
+      {/* HERO SECTION - Paleta Pastel */}
+      <div style={{ background: 'linear-gradient(135deg, #E6D9F0 0%, #FFFBF5 100%)', borderRadius: 24, padding: 48, marginBottom: 48, border: '1px solid #E8DFE8', position: 'relative', overflow: 'hidden' }}>
+        {/* Elementos decorativos circulares pastel */}
+        <div style={{ position: 'absolute', top: -40, left: -60, width: 280, height: 280, background: 'radial-gradient(circle, rgba(255, 212, 229, 0.3) 0%, transparent 70%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: -80, right: -60, width: 320, height: 320, background: 'radial-gradient(circle, rgba(212, 232, 228, 0.25) 0%, transparent 70%)', borderRadius: '50%' }} />
+        
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 style={{ fontSize: 44, fontWeight: 900, color: '#1B30CC', marginBottom: 12, letterSpacing: '-0.02em' }}>
+            Panel de Planificación Q{q}
+          </h1>
+          <p style={{ fontSize: 16, color: '#475569', lineHeight: 1.7, maxWidth: 700, marginBottom: 24 }}>
+            Visualiza el progreso de tus métricas de éxito, iniciativas del quarter y capacidades del equipo. Accede rápidamente a las herramientas principales.
+          </p>
+          
+          {/* Estadísticas rápidas */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 32 }}>
+            <div style={{ background: 'rgba(255, 212, 229, 0.5)', borderRadius: 16, padding: 20, border: '1px solid #FFE5F0', backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#C2185B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Total MOS</div>
+              <div style={{ fontSize: 36, fontWeight: 900, color: '#1B30CC' }}>{mos.length}</div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Métricas de éxito activas</div>
+            </div>
+            
+            <div style={{ background: 'rgba(212, 232, 228, 0.5)', borderRadius: 16, padding: 20, border: '1px solid #D4E8E4', backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#00796B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Iniciativas</div>
+              <div style={{ fontSize: 36, fontWeight: 900, color: '#1B30CC' }}>{iniciativas.filter(i => i.q === q).length}</div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Entregables del quarter</div>
+            </div>
+            
+            <div style={{ background: 'rgba(230, 217, 240, 0.5)', borderRadius: 16, padding: 20, border: '1px solid #E6D9F0', backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#512DA8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Completado</div>
+              <div style={{ fontSize: 36, fontWeight: 900, color: '#1B30CC' }}>{iniciativas.filter(i => i.q === q && i.tag === 'done').length}</div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Iniciativas finalizadas</div>
+            </div>
+
+            <div style={{ background: 'rgba(255, 244, 212, 0.5)', borderRadius: 16, padding: 20, border: '1px solid #FFF4D4', backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#F57F17', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>En Curso</div>
+              <div style={{ fontSize: 36, fontWeight: 900, color: '#1B30CC' }}>{iniciativas.filter(i => i.q === q && i.tag === 'wip').length}</div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>Iniciativas activas</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="page-body inicio-body" style={{ marginTop: 40 }}>
+      <div className="page-body inicio-body">
         {/* MOS / BETs — filtrado por Q activo */}
         <SecHdr label={`Métricas de Éxito (MOS) — Q${q}`} />
         <div style={{ marginBottom: 48 }}>
@@ -233,8 +268,32 @@ export default function Home({ data, q, onNavCapacidad, onNav }: Props) {
             label="Roadmap"
             description="Ver el plan de trabajo y estado de las iniciativas"
             onClick={() => onNav?.('roadmap')}
-            color="#0032A0"
+            color="#1B30CC"
             sublabel="Planificación"
+          />
+          <QuickAccessCard
+            icon={Icons.reviews}
+            label="Reviews"
+            description="Revisar las presentaciones de avance del equipo"
+            onClick={() => onNav?.('reviews')}
+            color="#C2185B"
+            sublabel="Seguimiento"
+          />
+          <QuickAccessCard
+            icon={Icons.flujos}
+            label="Flujos de Negocio"
+            description="Procesos y flujos operativos del equipo"
+            onClick={() => onNav?.('bets')}
+            color="#00796B"
+            sublabel="Recursos"
+          />
+          <QuickAccessCard
+            icon={Icons.capacitaciones}
+            label="Capacitaciones"
+            description="Programas de desarrollo y capacitación del equipo"
+            onClick={() => onNav?.('capacitaciones')}
+            color="#F57F17"
+            sublabel="Desarrollo"
           />
           <QuickAccessCard
             icon={Icons.reviews}
