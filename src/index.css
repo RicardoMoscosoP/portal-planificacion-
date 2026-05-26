@@ -40,26 +40,26 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);dis
 #root{flex:1;min-width:0;width:100%;}
 
 /* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
-.sidebar{width:var(--sb);min-width:var(--sb);background:linear-gradient(180deg, #0A1650 0%, #0F1E66 100%);min-height:100vh;position:fixed;left:0;top:0;bottom:0;z-index:50;display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.1);box-shadow:4px 0 20px rgba(10,22,80,0.25);}
-.sb-logo{padding:16px 12px;border-bottom:1px solid rgba(43,184,212,0.2);}
-.sb-logo img{width:100%;border-radius:12px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+.sidebar{width:var(--sb);min-width:var(--sb);background:linear-gradient(180deg, #F8FAFB 0%, #F3F5F7 100%);min-height:100vh;position:fixed;left:0;top:0;bottom:0;z-index:50;display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid #E5E7EB;box-shadow:2px 0 8px rgba(15,23,42,0.08);}
+.sb-logo{padding:16px 12px;border-bottom:1px solid #E5E7EB;}
+.sb-logo img{width:100%;border-radius:12px;display:block;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .sb-logo-name{display:none;}
 .sb-logo-sub{display:none;}
 .sb-nav{flex:1;padding:12px 8px;}
-.sb-group{font-family:'Manrope',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);padding:16px 12px 8px 12px;margin-top:4px;border-top:1px solid rgba(43,184,212,0.15);}
-.sb-item{display:flex;align-items:center;gap:12px;padding:11px 12px;color:rgba(255,255,255,0.75);cursor:pointer;transition:all 0.2s;border:none;font-size:13px;font-weight:500;background:none;width:100%;text-align:left;border-radius:10px;font-family:'Manrope',sans-serif;position:relative;}
-.sb-item:hover{background:rgba(43,184,212,0.15);color:#2BB8D4;transform:translateX(2px);}
-.sb-item.active{background:rgba(43,184,212,0.25);color:#2BB8D4;box-shadow:inset 0 0 0 1px rgba(43,184,212,0.3);font-weight:600;border-left:3px solid #2BB8D4;padding-left:9px;}
-.sb-item svg{width:20px;height:20px;flex-shrink:0;opacity:0.8;}
+.sb-group{font-family:'Manrope',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#94A3B8;padding:16px 12px 8px 12px;margin-top:4px;border-top:1px solid #E5E7EB;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 12px;color:#475569;cursor:pointer;transition:all 0.2s;border:none;font-size:13px;font-weight:500;background:none;width:100%;text-align:left;border-radius:10px;font-family:'Manrope',sans-serif;position:relative;}
+.sb-item:hover{background:#E0E7FF;color:#1B30CC;transform:translateX(2px);}
+.sb-item.active{background:#E0E7FF;color:#1B30CC;box-shadow:none;font-weight:600;border-left:3px solid #1B30CC;padding-left:9px;}
+.sb-item svg{width:20px;height:20px;flex-shrink:0;opacity:0.7;}
 .sb-item.active svg{opacity:1;}
-.sb-foot{padding:12px 8px;border-top:1px solid rgba(43,184,212,0.2);margin-top:auto;}
-.sb-admin{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.75);cursor:pointer;padding:11px 12px;border-radius:10px;border:none;transition:all 0.2s;background:none;width:100%;text-align:left;font-family:'Manrope',sans-serif;position:relative;}
-.sb-admin svg{width:20px;height:20px;flex-shrink:0;opacity:0.8;}
-.sb-admin:hover{background:rgba(43,184,212,0.15);color:#2BB8D4;transform:translateX(2px);}
-.sb-admin.active{background:rgba(43,184,212,0.25);color:#2BB8D4;box-shadow:inset 0 0 0 1px rgba(43,184,212,0.3);border-left:3px solid #2BB8D4;padding-left:9px;}
+.sb-foot{padding:12px 8px;border-top:1px solid #E5E7EB;margin-top:auto;}
+.sb-admin{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;color:#475569;cursor:pointer;padding:11px 12px;border-radius:10px;border:none;transition:all 0.2s;background:none;width:100%;text-align:left;font-family:'Manrope',sans-serif;position:relative;}
+.sb-admin svg{width:20px;height:20px;flex-shrink:0;opacity:0.7;}
+.sb-admin:hover{background:#E0E7FF;color:#1B30CC;transform:translateX(2px);}
+.sb-admin.active{background:#E0E7FF;color:#1B30CC;box-shadow:none;border-left:3px solid #1B30CC;padding-left:9px;}
 .sb-admin.active svg{opacity:1;}
-.sb-sync-btn{width:100%;padding:8px 10px;font-size:11px;font-weight:600;border-radius:8px;border:1px solid rgba(43,184,212,0.3);background:rgba(43,184,212,0.1);color:#2BB8D4;cursor:pointer;transition:all 0.2s;font-family:'Manrope',sans-serif;}
-.sb-sync-btn:hover{background:rgba(43,184,212,0.2);border-color:#2BB8D4;color:#fff;}
+.sb-sync-btn{width:100%;padding:8px 10px;font-size:11px;font-weight:600;border-radius:8px;border:1px solid #E0E7FF;background:#F0F4FF;color:#1B30CC;cursor:pointer;transition:all 0.2s;font-family:'Manrope',sans-serif;}
+.sb-sync-btn:hover{background:#E0E7FF;border-color:#1B30CC;color:#1B30CC;}
 .sb-sync-btn:disabled{opacity:0.4;cursor:not-allowed;}
 .admin-tab{display:flex;align-items:center;gap:6px;padding:9px 16px;background:none;border:none;border-bottom:2px solid transparent;border-radius:10px 10px 0 0;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;}
 .admin-tab:hover{background:#F3F4F6;color:#0032A0;}
@@ -162,8 +162,8 @@ html{scrollbar-gutter:stable;}
 /* ── RESPONSIVE SIDEBAR (móvil) ─────────────────────────────────────────── */
 /* Botón hamburger — oculto en desktop */
 .sb-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;margin-bottom:8px;align-self:flex-start;transition:all 0.2s;}
-.sb-hamburger span{display:block;width:22px;height:2.5px;background:#0A1650;border-radius:2px;transition:all 0.3s;}
-.sb-hamburger:hover span{background:#1B30CC;}
+.sb-hamburger span{display:block;width:22px;height:2.5px;background:#1B30CC;border-radius:2px;transition:all 0.3s;}
+.sb-hamburger:hover span{background:#0A1650;}
 /* Overlay oscuro cuando sidebar está abierto */
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49;backdrop-filter:blur(2px);}
 
