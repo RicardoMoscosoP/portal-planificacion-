@@ -102,99 +102,158 @@ export function MosSection({ bets, mos, q }: { bets: Bet[]; mos: MOS[]; q?: stri
 
   if (rows.length === 0) {
     return (
-      <div style={{ background: '#fff', border: '1px dashed #DCE7FF', borderRadius: 12, padding: 20, color: '#999', fontSize: 13, fontStyle: 'italic' }}>
+      <div style={{ background: '#fff', border: '1px dashed #E8DFE8', borderRadius: 12, padding: 20, color: '#999', fontSize: 13, fontStyle: 'italic' }}>
         No hay MOS del Bet configurados.
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* ── Tabla Bets / MOS con Paleta Pastel ── */}
-      <div style={{ background: '#fff', border: '1px solid #E8DFE8', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(10,22,80,0.05)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-          <thead style={{ background: 'linear-gradient(135deg, #E6D9F0 0%, #F0E8F5 100%)', color: '#1B30CC', borderBottom: '2px solid #D6C9E0' }}>
-            <tr>
-              <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Bet / LVT</th>
-              <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>MOS del Bet</th>
-              <th style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 80 }}>Base</th>
-              <th style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 80 }}>Meta</th>
-              <th style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 700, fontSize: 12.8, textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 80 }}>Real</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ bet, activeMos }, betIndex) => {
-              const isEvenRow = betIndex % 2 === 0;
-              return (
-                <tr
-                  key={bet.id}
-                  style={{ 
-                    borderBottom: betIndex < rows.length - 1 ? '1px solid #E8DFE8' : 'none',
-                    background: isEvenRow ? '#FFFBF5' : '#F5F0FA'
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#F9F3FC')}
-                  onMouseLeave={e => (e.currentTarget.style.background = isEvenRow ? '#FFFBF5' : '#F5F0FA')}
-                >
-                  {/* Bet / LVT */}
-                  <td style={{ padding: '20px', verticalAlign: 'top', textAlign: 'left' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2, background: `${bet.color}33`, color: bet.color }}>●</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, marginBottom: 8, lineHeight: 1.4, color: '#0A1650', fontSize: 14 }}>{bet.descripcion}</div>
-                        <div>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.2px', marginRight: 5 }}>Producto:</span>
-                          {getBetProducts(bet).map(product => (
-                            <span key={product} style={{ display: 'inline-block', padding: '4px 9px', borderRadius: 4, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', background: `${bet.color}14`, color: bet.color, border: `1px solid ${bet.color}26`, marginRight: 4 }}>
-                              {product}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  {/* MOS del Bet */}
-                  <td style={{ padding: '20px', verticalAlign: 'top', maxWidth: 260, textAlign: 'left' }}>
-                    {activeMos.map((item, idx) => {
-                      const indicator = item.descripcion.trim().startsWith('(+)') ? '(+)' : (item.descripcion.trim().startsWith('(-)') || item.descripcion.trim().startsWith('(–)')) ? '(–)' : '';
-                      const descText = item.descripcion.replace(/^\([+\-–]\)\s*/, '');
-                      return (
-                        <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 12 : 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: 13.5, marginBottom: 2, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                            {indicator && <span style={{ fontWeight: 700, minWidth: 32, color: '#0A1650', flexShrink: 0 }}>{indicator}</span>}
-                            <span style={{ color: '#0A1650', lineHeight: 1.4 }}>{descText}</span>
-                          </div>
-                          <div style={{ fontSize: 12, color: '#999', paddingLeft: indicator ? 40 : 0 }}>
-                            {q ? q : getMosQuarters(item).join(', ')}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </td>
-                  {/* Base - Amarillo Pastel */}
-                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#F57F17', background: 'linear-gradient(135deg, #FFF4D4 0%, #FFF9E8 100%)' }}>
-                    {activeMos.map((item, idx) => (
-                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0, padding: '6px 10px', borderRadius: 8, background: 'rgba(255, 212, 63, 0.15)', border: '1px solid rgba(245, 127, 23, 0.2)' }}>{item.linea_base || '—'}</div>
-                    ))}
-                  </td>
-                  {/* Meta - Lavanda Pastel */}
-                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#1B30CC', background: 'linear-gradient(135deg, #E6D9F0 0%, #F0E8F5 100%)' }}>
-                    {activeMos.map((item, idx) => (
-                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0, padding: '6px 10px', borderRadius: 8, background: 'rgba(27, 48, 204, 0.1)', border: '1px solid rgba(27, 48, 204, 0.25)' }}>{item.meta || '—'}</div>
-                    ))}
-                  </td>
-                  {/* Real - Rosa Pastel */}
-                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: 15, padding: '20px 16px', verticalAlign: 'middle', color: '#C2185B', background: 'linear-gradient(135deg, #FFD4E5 0%, #FFE5F0 100%)' }}>
-                    {activeMos.map((item, idx) => (
-                      <div key={item.id} style={{ marginBottom: idx < activeMos.length - 1 ? 14 : 0, padding: '6px 10px', borderRadius: 8, background: 'rgba(194, 24, 91, 0.1)', border: '1px solid rgba(194, 24, 91, 0.2)' }}>{item.actual || '—'}</div>
-                    ))}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+      {rows.map(({ bet, activeMos }) => {
+        // Calcular promedios para visualización
+        const baseAvg = activeMos.reduce((sum, m) => sum + (parseFloat(m.linea_base?.toString() ?? '0') || 0), 0) / activeMos.length;
+        const metaAvg = activeMos.reduce((sum, m) => sum + (parseFloat(m.meta?.toString() ?? '0') || 0), 0) / activeMos.length;
+        const realAvg = activeMos.reduce((sum, m) => sum + (parseFloat(m.actual?.toString() ?? '0') || 0), 0) / activeMos.length;
+        const progressPercent = metaAvg > 0 ? Math.min((realAvg / metaAvg) * 100, 100) : 0;
+        const isMetReached = realAvg >= metaAvg;
 
+        return (
+          <div
+            key={bet.id}
+            style={{
+              background: '#fff',
+              border: `1.5px solid ${bet.color}30`,
+              borderRadius: 16,
+              padding: 20,
+              boxShadow: '0 2px 8px rgba(10,22,80,0.04)',
+              transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+              cursor: 'default',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = bet.color;
+              (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 24px ${bet.color}20, inset 0 1px 1px rgba(255,255,255,0.5)`;
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = `${bet.color}30`;
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(10,22,80,0.04)';
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+            }}
+          >
+            {/* Elemento decorativo de fondo */}
+            <div style={{ position: 'absolute', top: 0, right: 0, width: 100, height: 100, background: `${bet.color}08`, borderRadius: '50%', transform: 'translate(30%, -30%)', zIndex: 0 }} />
+
+            {/* Contenido */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              {/* Header: Nombre BET + Color indicator */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16 }}>
+                <div
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    background: bet.color,
+                    flexShrink: 0,
+                    marginTop: 4,
+                    boxShadow: `0 0 12px ${bet.color}60`
+                  }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: bet.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2, fontFamily: 'Manrope, sans-serif' }}>
+                    {getBetProducts(bet).join(' • ')}
+                  </div>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0A1650', lineHeight: 1.3, margin: 0 }}>{bet.descripcion}</h3>
+                </div>
+              </div>
+
+              {/* MOS List - Compacta */}
+              <div style={{ background: `${bet.color}05`, borderRadius: 10, padding: 12, marginBottom: 16, border: `1px solid ${bet.color}15` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, fontFamily: 'Manrope, sans-serif' }}>
+                  Objetivos ({activeMos.length})
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {activeMos.map((item, idx) => {
+                    const indicator = item.descripcion.trim().startsWith('(+)') ? '(+)' : item.descripcion.trim().startsWith('(-)') || item.descripcion.trim().startsWith('(–)') ? '(–)' : '';
+                    const descText = item.descripcion.replace(/^\([+\-–]\)\s*/, '');
+                    return (
+                      <div key={item.id} style={{ fontSize: 12, color: '#475569', display: 'flex', gap: 6, lineHeight: 1.3 }}>
+                        {indicator && <span style={{ fontWeight: 700, color: bet.color, minWidth: 20 }}>{indicator}</span>}
+                        <span>{descText}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Números: Base | Meta | Real */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+                <div style={{ background: '#FFF4D4', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #FFE5B4' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#F57F17', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4, fontFamily: 'Manrope, sans-serif' }}>
+                    Base
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#F57F17' }}>
+                    {Math.round(baseAvg)}
+                  </div>
+                </div>
+                <div style={{ background: '#E6D9F0', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #D6C9E0' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#1B30CC', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4, fontFamily: 'Manrope, sans-serif' }}>
+                    Meta
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#1B30CC' }}>
+                    {Math.round(metaAvg)}
+                  </div>
+                </div>
+                <div style={{ background: '#FFD4E5', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #FFC4DB' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#C2185B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4, fontFamily: 'Manrope, sans-serif' }}>
+                    Real
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#C2185B' }}>
+                    {Math.round(realAvg)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Barra de progreso */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#666', textTransform: 'uppercase', fontFamily: 'Manrope, sans-serif' }}>
+                    Progreso
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: isMetReached ? '#048A4A' : '#F57F17' }}>
+                    {Math.round(progressPercent)}%
+                  </div>
+                </div>
+                <div style={{ width: '100%', height: 6, background: '#E5E7EB', borderRadius: 3, overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      background: `linear-gradient(90deg, #1B30CC 0%, ${isMetReached ? '#048A4A' : bet.color} 100%)`,
+                      width: `${progressPercent}%`,
+                      transition: 'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Badge de estado */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {isMetReached ? (
+                  <div style={{ flex: 1, padding: '8px 12px', background: '#D1FAE5', border: '1px solid #A7F3D0', borderRadius: 8, textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#065F46', fontFamily: 'Manrope, sans-serif' }}>
+                    ✓ Meta alcanzada
+                  </div>
+                ) : (
+                  <div style={{ flex: 1, padding: '8px 12px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8, textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#92400E', fontFamily: 'Manrope, sans-serif' }}>
+                    ◐ En progreso
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
